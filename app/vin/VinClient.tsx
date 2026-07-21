@@ -60,7 +60,7 @@ export default function VinClient() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-accent px-8 py-3.5 font-bold text-background transition-colors hover:bg-accent-2 disabled:opacity-60"
+          className="rounded-xl bg-accent px-8 py-3.5 font-bold text-white transition-colors hover:bg-accent-2 disabled:opacity-60"
         >
           {loading ? "Проверяем…" : "Проверить"}
         </button>

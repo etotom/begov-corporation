@@ -84,7 +84,7 @@ export default function CatalogClient({ cars: allCars }: { cars: Car[] }) {
           </p>
           <Link
             href="/contacts"
-            className="mt-6 inline-block rounded-xl bg-accent px-6 py-3 text-sm font-bold text-background hover:bg-accent-2"
+            className="mt-6 inline-block rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white hover:bg-accent-2"
           >
             Заказать подбор
           </Link>

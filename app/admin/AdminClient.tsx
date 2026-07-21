@@ -316,7 +316,7 @@ export default function AdminClient({
         <div className="mt-6">
           <button
             onClick={openCreate}
-            className="rounded-xl bg-accent px-6 py-3 text-sm font-bold text-background transition-colors hover:bg-accent-2"
+            className="rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-accent-2"
           >
             + Добавить авто
           </button>
@@ -368,7 +368,7 @@ export default function AdminClient({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-background transition-colors hover:bg-accent-2 disabled:opacity-60"
+                  className="rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-2 disabled:opacity-60"
                 >
                   {saving ? "Сохраняем…" : "Сохранить"}
                 </button>

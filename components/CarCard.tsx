@@ -105,7 +105,7 @@ export default function CarCard({ car }: { car: Car }) {
           </div>
           <Link
             href={`/contacts?car=${encodeURIComponent(`${car.make} ${car.model} ${car.year}`)}`}
-            className="rounded-lg bg-accent px-3.5 py-2 text-[13px] font-bold text-background transition-colors hover:bg-accent-2"
+            className="rounded-lg bg-accent px-3.5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-accent-2"
           >
             Запросить
           </Link>

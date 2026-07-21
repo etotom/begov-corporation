@@ -95,7 +95,7 @@ export default function ContactsClient() {
               {error && <p className="text-sm text-red-400">{error}</p>}
               <button
                 type="submit"
-                className="w-full rounded-xl bg-accent px-6 py-3.5 font-bold text-background transition-colors hover:bg-accent-2"
+                className="w-full rounded-xl bg-accent px-6 py-3.5 font-bold text-white transition-colors hover:bg-accent-2"
               >
                 Отправить заявку
               </button>

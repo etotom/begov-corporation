@@ -1,6 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import CarCard from "@/components/CarCard";
-import HeroIllustration from "@/components/HeroIllustration";
+import PhotoHero from "@/components/PhotoHero";
 import Reveal from "@/components/Reveal";
 import { getVisibleCars } from "@/lib/db";
 
@@ -100,7 +101,7 @@ export default async function Home() {
             <div className="mt-9 flex flex-wrap gap-4">
               <Link
                 href="/contacts"
-                className="rounded-xl bg-accent px-7 py-3.5 font-bold text-background transition-colors hover:bg-accent-2 hover:scale-[1.03] active:scale-[0.98] transition-transform"
+                className="rounded-xl bg-accent px-7 py-3.5 font-bold text-white transition-colors hover:bg-accent-2 hover:scale-[1.03] active:scale-[0.98] transition-transform"
               >
                 Подобрать авто
               </Link>
@@ -113,7 +114,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <HeroIllustration className="w-full max-w-xl justify-self-center lg:justify-self-end" />
+          <PhotoHero className="aspect-[4/3] w-full max-w-xl justify-self-center lg:justify-self-end" />
         </div>
 
         <div className="mx-auto max-w-6xl px-4 pb-16 sm:pb-20 lg:pb-24">
@@ -269,25 +270,33 @@ export default async function Home() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-line bg-hero">
-        <div className="mx-auto max-w-6xl px-4 py-20 text-center">
-          <h2 className="font-display mx-auto max-w-2xl text-2xl font-bold sm:text-4xl">
+      <section className="relative overflow-hidden border-t border-line">
+        <Image
+          src="/hero/port-showcase.jpg"
+          alt="Автомобиль Begov Corporation готов к отправке из порта"
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/80 to-foreground/55" />
+        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center">
+          <h2 className="font-display mx-auto max-w-2xl text-2xl font-bold text-white sm:text-4xl">
             Готовы найти <span className="text-gold">ваш автомобиль</span>?
           </h2>
-          <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
             Оставьте заявку — менеджер подберет варианты под ваш бюджет и посчитает точную
             смету доставки до вашего города.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-4">
             <Link
               href="/contacts"
-              className="rounded-xl bg-accent px-8 py-3.5 font-bold text-background transition-colors hover:bg-accent-2"
+              className="rounded-xl bg-accent px-8 py-3.5 font-bold text-white transition-colors hover:bg-accent-2"
             >
               Оставить заявку
             </Link>
             <Link
               href="/auth/register"
-              className="rounded-xl border border-line px-8 py-3.5 font-semibold transition-colors hover:border-accent hover:text-accent"
+              className="rounded-xl border border-white/30 px-8 py-3.5 font-semibold text-white transition-colors hover:border-accent hover:text-accent"
             >
               Создать личный кабинет
             </Link>

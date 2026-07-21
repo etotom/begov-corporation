@@ -68,7 +68,7 @@ export default function AccountPage() {
             {user.role === "admin" && (
               <Link
                 href="/admin"
-                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-background transition-colors hover:bg-accent-2"
+                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-2"
               >
                 ⚙ Admin — панель управления
               </Link>

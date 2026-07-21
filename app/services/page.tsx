@@ -77,7 +77,7 @@ export default function ServicesPage() {
         </p>
         <Link
           href="/contacts"
-          className="mt-6 inline-block rounded-xl bg-accent px-8 py-3.5 font-bold text-background transition-colors hover:bg-accent-2"
+          className="mt-6 inline-block rounded-xl bg-accent px-8 py-3.5 font-bold text-white transition-colors hover:bg-accent-2"
         >
           Получить подборку авто
         </Link>
