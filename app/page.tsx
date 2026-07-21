@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import CarCard from "@/components/CarCard";
-import PhotoHero from "@/components/PhotoHero";
+import PhotoBanner from "@/components/PhotoBanner";
 import Reveal from "@/components/Reveal";
 import { getVisibleCars } from "@/lib/db";
 
@@ -84,16 +84,23 @@ export default async function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="bg-hero border-b border-line overflow-hidden">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 pb-14 pt-16 sm:pt-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-6 lg:pb-8">
-          <div>
-            <p className="font-display text-xs font-semibold tracking-[0.3em] text-accent uppercase">
+      <section className="border-b border-line">
+        <PhotoBanner
+          src="/hero/carrier-road.jpg"
+          alt="Автовоз Begov Corporation с автомобилями на трассе"
+          overlay="left"
+          priority
+          className="flex min-h-[600px] flex-col justify-between sm:min-h-[640px] lg:min-h-[720px]"
+        >
+          <div className="mx-auto w-full max-w-6xl px-4 pt-16 sm:pt-24">
+            <p className="font-display text-gold-bright text-xs font-semibold tracking-[0.3em] uppercase">
               Georgia 🇬🇪 · Auto Export
             </p>
-            <h1 className="font-display mt-5 max-w-3xl text-3xl font-bold leading-tight sm:text-5xl">
-              Авто из США, Европы и ОАЭ — <span className="text-gold">под ключ до вашего города</span>
+            <h1 className="font-display mt-5 max-w-2xl text-3xl font-bold leading-tight text-white sm:text-5xl">
+              Авто из США, Европы и ОАЭ —{" "}
+              <span className="text-gold-bright">под ключ до вашего города</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg">
               Подбираем и выкупаем автомобили на аукционах, доставляем через Грузию и везем
               собственными автовозами в Таджикистан, Узбекистан, Казахстан, Кыргызстан и Россию.
               Один договор — полная ответственность за результат.
@@ -107,33 +114,31 @@ export default async function Home() {
               </Link>
               <Link
                 href="/calculator"
-                className="rounded-xl border border-line px-7 py-3.5 font-semibold transition-colors hover:border-accent hover:text-accent"
+                className="rounded-xl border border-white/35 px-7 py-3.5 font-semibold text-white transition-colors hover:border-[#f0b32e] hover:text-[#f0b32e]"
               >
                 Рассчитать доставку
               </Link>
             </div>
           </div>
 
-          <PhotoHero className="aspect-[4/3] w-full max-w-xl justify-self-center lg:justify-self-end" />
-        </div>
-
-        <div className="mx-auto max-w-6xl px-4 pb-16 sm:pb-20 lg:pb-24">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {[
-              ["3 региона", "закупки: США · Европа · ОАЭ"],
-              ["5 стран", "доставки в СНГ и Азию"],
-              ["Свои автовозы", "и охраняемая стоянка"],
-              ["Под ключ", "от аукциона до документов"],
-            ].map(([big, small], i) => (
-              <Reveal key={big} delay={i * 80}>
-                <div className="card-glow rounded-xl border border-line bg-surface/60 p-4 transition-shadow">
-                  <div className="font-display text-lg font-bold text-accent">{big}</div>
-                  <div className="mt-1 text-xs text-muted">{small}</div>
-                </div>
-              </Reveal>
-            ))}
+          <div className="mx-auto w-full max-w-6xl px-4 pb-10 sm:pb-12">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {[
+                ["3 региона", "закупки: США · Европа · ОАЭ"],
+                ["5 стран", "доставки в СНГ и Азию"],
+                ["Свои автовозы", "и охраняемая стоянка"],
+                ["Под ключ", "от аукциона до документов"],
+              ].map(([big, small], i) => (
+                <Reveal key={big} delay={i * 80}>
+                  <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-md transition-colors hover:bg-white/15">
+                    <div className="font-display text-lg font-bold text-white">{big}</div>
+                    <div className="mt-1 text-xs text-white/70">{small}</div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
+        </PhotoBanner>
       </section>
 
       {/* Инструменты */}
@@ -206,6 +211,29 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Автопарк в деле */}
+      <PhotoBanner
+        src="/hero/carrier-highway.jpg"
+        alt="Автовоз Begov Corporation везёт автомобили по трассе"
+        overlay="full"
+        className="min-h-[280px] sm:min-h-[340px]"
+      >
+        <div className="mx-auto flex h-full max-w-6xl flex-col items-center justify-center px-4 py-14 text-center">
+          <p className="font-display text-gold-bright text-xs font-semibold tracking-[0.3em] uppercase">
+            Собственный автопарк
+          </p>
+          <h2 className="font-display mt-4 max-w-2xl text-2xl font-bold text-white sm:text-3xl">
+            Наши автовозы каждый день везут авто из Грузии в Центральную Азию и Россию
+          </h2>
+          <Link
+            href="/services"
+            className="mt-6 inline-block text-sm font-bold text-white underline decoration-2 underline-offset-4 transition-colors hover:text-[#f0b32e]"
+          >
+            Узнать про доставку →
+          </Link>
+        </div>
+      </PhotoBanner>
+
       {/* Авто в наличии */}
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="flex items-end justify-between gap-4">
@@ -228,24 +256,43 @@ export default async function Home() {
 
       {/* Почему мы */}
       <section className="border-y border-line bg-surface/40">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="font-display text-2xl font-bold sm:text-3xl">Почему Begov Corporation</h2>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2">
-            {WHY.map((w, i) => (
-              <Reveal key={w.title} delay={(i % 2) * 120}>
-                <div className="card-glow flex h-full gap-5 rounded-2xl border border-line bg-surface p-6 transition-shadow">
-                  <span className="h-fit rounded-xl bg-accent/15 p-3 text-accent">
-                    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                      {w.icon}
-                    </svg>
-                  </span>
-                  <div>
-                    <h3 className="font-display font-semibold">{w.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted">{w.text}</p>
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-14">
+          <Reveal className="order-2 lg:order-1">
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border border-line shadow-xl">
+              <Image
+                src="/hero/carrier-front.jpg"
+                alt="Тягач Scania с брендингом Begov Corporation"
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 480px, 100vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
+              <div className="absolute bottom-5 left-5 right-5 rounded-xl bg-white/10 px-4 py-3 backdrop-blur-md">
+                <p className="font-display text-sm font-semibold text-white">Собственный автопарк Begov</p>
+                <p className="mt-0.5 text-xs text-white/70">Без посредников — от Грузии до вашего города</p>
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="order-1 lg:order-2">
+            <h2 className="font-display text-2xl font-bold sm:text-3xl">Почему Begov Corporation</h2>
+            <div className="mt-8 divide-y divide-line">
+              {WHY.map((w, i) => (
+                <Reveal key={w.title} delay={i * 90}>
+                  <div className="flex gap-5 py-5 first:pt-0">
+                    <span className="h-fit shrink-0 rounded-xl bg-accent/15 p-3 text-accent">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                        {w.icon}
+                      </svg>
+                    </span>
+                    <div>
+                      <h3 className="font-display font-semibold">{w.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted">{w.text}</p>
+                    </div>
                   </div>
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -270,18 +317,15 @@ export default async function Home() {
       </section>
 
       {/* CTA */}
-      <section className="relative overflow-hidden border-t border-line">
-        <Image
-          src="/hero/port-showcase.jpg"
-          alt="Автомобиль Begov Corporation готов к отправке из порта"
-          fill
-          className="object-cover"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/80 to-foreground/55" />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 text-center">
+      <PhotoBanner
+        src="/hero/port-showcase.jpg"
+        alt="Автомобиль Begov Corporation готов к отправке из порта"
+        overlay="full"
+        className="border-t border-line"
+      >
+        <div className="mx-auto max-w-6xl px-4 py-20 text-center">
           <h2 className="font-display mx-auto max-w-2xl text-2xl font-bold text-white sm:text-4xl">
-            Готовы найти <span className="text-gold">ваш автомобиль</span>?
+            Готовы найти <span className="text-gold-bright">ваш автомобиль</span>?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
             Оставьте заявку — менеджер подберет варианты под ваш бюджет и посчитает точную
@@ -296,13 +340,13 @@ export default async function Home() {
             </Link>
             <Link
               href="/auth/register"
-              className="rounded-xl border border-white/30 px-8 py-3.5 font-semibold text-white transition-colors hover:border-accent hover:text-accent"
+              className="rounded-xl border border-white/30 px-8 py-3.5 font-semibold text-white transition-colors hover:border-[#f0b32e] hover:text-[#f0b32e]"
             >
               Создать личный кабинет
             </Link>
           </div>
         </div>
-      </section>
+      </PhotoBanner>
     </>
   );
 }

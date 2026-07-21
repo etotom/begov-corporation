@@ -46,6 +46,14 @@ body {
   color: transparent;
 }
 
+/* для золотого текста поверх тёмных фото/оверлеев — светлее, чем .text-gold */
+.text-gold-bright {
+  background: linear-gradient(115deg, #f9d878 10%, #e8a930 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .bg-hero {
   background:
     radial-gradient(ellipse 75% 60% at 50% -10%, rgba(150, 101, 12, 0.14), transparent),
@@ -63,26 +71,17 @@ input, select, textarea {
   color-scheme: light;
 }
 
-/* --- photo hero slider --- */
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 1.4s ease-in-out;
+/* --- фото-баннеры: медленный непрерывный zoom --- */
+@keyframes kenburns-loop {
+  0% { transform: scale(1.02); }
+  100% { transform: scale(1.11); }
 }
-.hero-slide-active {
-  opacity: 1;
-}
-.hero-slide-active :where(img) {
-  animation: hero-kenburns 6s ease-out forwards;
-}
-@keyframes hero-kenburns {
-  from { transform: scale(1); }
-  to { transform: scale(1.08); }
+.kenburns {
+  animation: kenburns-loop 20s ease-in-out infinite alternate;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-slide-active :where(img) {
+  .kenburns {
     animation: none;
   }
 }
