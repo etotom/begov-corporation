@@ -36,8 +36,8 @@ export default function RegisterPage() {
       setError("Нужно согласиться на обработку персональных данных.");
       return;
     }
-    if (form.password.length < 6) {
-      setError("Пароль должен быть не короче 6 символов.");
+    if (form.password.length < 8) {
+      setError("Пароль должен быть не короче 8 символов.");
       return;
     }
     if (form.password !== form.password2) {
@@ -84,7 +84,7 @@ export default function RegisterPage() {
             <option key={c}>{c}</option>
           ))}
         </select>
-        <input value={form.password} onChange={set("password")} type="password" placeholder="Пароль (мин. 6 символов) *" className={inputCls} />
+        <input value={form.password} onChange={set("password")} type="password" placeholder="Пароль (мин. 8 символов) *" className={inputCls} />
         <input value={form.password2} onChange={set("password2")} type="password" placeholder="Повторите пароль *" className={inputCls} />
         <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted">
           <input

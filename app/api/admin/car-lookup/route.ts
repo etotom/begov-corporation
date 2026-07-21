@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 // Честный, представившийся бот (как у Slack/Telegram при разворачивании ссылок) —
 // вытягиваем только то, что сайт сам публикует в open graph / meta для превью.
@@ -31,6 +32,9 @@ function decodeEntities(s: string): string {
 
 export async function POST(request: Request) {
   if (!(await isAdmin())) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!rateLimit(`car-lookup:${clientIp(request)}`, 20, 60 * 60 * 1000)) {
+    return NextResponse.json({ ok: false, reason: "Слишком много запросов, попробуйте позже" }, { status: 429 });
+  }
 
   const body = await request.json().catch(() => null);
   const rawUrl = typeof body?.url === "string" ? body.url.trim() : "";
@@ -41,26 +45,38 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ ok: false, reason: "Некорректная ссылка" }, { status: 400 });
   }
-  const host = url.hostname.toLowerCase();
-  const isPrivate =
-    host === "localhost" ||
-    /^127\./.test(host) ||
-    /^0\./.test(host) ||
-    /^10\./.test(host) ||
-    /^192\.168\./.test(host) ||
-    /^169\.254\./.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-    host === "::1";
-  if (isPrivate) {
+  function isPrivateHost(h: string): boolean {
+    return (
+      h === "localhost" ||
+      /^127\./.test(h) ||
+      /^0\./.test(h) ||
+      /^10\./.test(h) ||
+      /^192\.168\./.test(h) ||
+      /^169\.254\./.test(h) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
+      h === "::1" ||
+      h.replace(/^\[|\]$/g, "").startsWith("fe80") ||
+      /^f[cd][0-9a-f]{2}:/i.test(h.replace(/^\[|\]$/g, ""))
+    );
+  }
+  if (isPrivateHost(url.hostname.toLowerCase())) {
     return NextResponse.json({ ok: false, reason: "Недопустимый адрес" }, { status: 400 });
   }
 
   try {
+    // redirect: "manual" — не идём по 3xx автоматически, иначе внешний сайт мог бы
+    // перенаправить наш сервер на внутренний адрес (SSRF через редирект).
     const res = await fetch(url, {
       headers: { "User-Agent": BOT_UA, Accept: "text/html" },
       signal: AbortSignal.timeout(8000),
-      redirect: "follow",
+      redirect: "manual",
     });
+    if (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400)) {
+      return NextResponse.json({
+        ok: false,
+        reason: "Сайт отвечает редиректом — вставьте прямую ссылку на объявление",
+      });
+    }
     if (!res.ok) {
       return NextResponse.json({
         ok: false,

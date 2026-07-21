@@ -1,3 +1,4 @@
+import "server-only";
 import { neon } from "@neondatabase/serverless";
 import type { Car, CarInput } from "@/lib/cars";
 

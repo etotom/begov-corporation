@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { createLead } from "@/lib/db";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const MAX = 2000;
 const clip = (v: unknown) => String(v ?? "").slice(0, MAX);
 
 export async function POST(request: Request) {
+  // 20 заявок в час с одного IP — защита от спама в таблицу лидов
+  if (!rateLimit(`lead:${clientIp(request)}`, 20, 60 * 60 * 1000)) {
+    return NextResponse.json({ ok: false, error: "Слишком много заявок, попробуйте позже" }, { status: 429 });
+  }
   try {
     const b = await request.json();
     const type = clip(b.type) || "Вопрос";

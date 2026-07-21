@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/i;
 
@@ -28,6 +29,14 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { ok: false, error: "VIN должен состоять из 17 символов (латинские буквы и цифры, без I, O, Q)" },
       { status: 400 },
+    );
+  }
+
+  // 30 проверок в час с одного IP — защита от перебора VIN и нагрузки на NHTSA
+  if (!rateLimit(`vin:${clientIp(request)}`, 30, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { ok: false, error: "Слишком много проверок подряд, попробуйте через некоторое время" },
+      { status: 429 },
     );
   }
 

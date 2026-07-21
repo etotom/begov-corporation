@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 import { createUser } from "@/lib/db";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { hashPassword, makeSession, sessionCookieOptions, SESSION_COOKIE } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
+  // 5 регистраций в час с одного IP — защита от массового создания аккаунтов
+  if (!rateLimit(`register:${clientIp(request)}`, 5, 60 * 60 * 1000)) {
+    return NextResponse.json(
+      { ok: false, error: "Слишком много попыток регистрации. Попробуйте позже." },
+      { status: 429 },
+    );
+  }
+
   const b = await request.json().catch(() => null);
   const name = String(b?.name ?? "").trim().slice(0, 200);
   const email = String(b?.email ?? "").trim().toLowerCase().slice(0, 200);
@@ -16,9 +25,9 @@ export async function POST(request: Request) {
   if (!/^\S+@\S+\.\S+$/.test(email)) {
     return NextResponse.json({ ok: false, error: "Проверьте формат email" }, { status: 400 });
   }
-  if (password.length < 6) {
+  if (password.length < 8) {
     return NextResponse.json(
-      { ok: false, error: "Пароль должен быть не короче 6 символов" },
+      { ok: false, error: "Пароль должен быть не короче 8 символов" },
       { status: 400 },
     );
   }
