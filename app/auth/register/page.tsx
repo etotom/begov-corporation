@@ -20,6 +20,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [key]: e.target.value });
@@ -29,6 +30,10 @@ export default function RegisterPage() {
     setError("");
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
       setError("Заполните имя, email и телефон.");
+      return;
+    }
+    if (!consent) {
+      setError("Нужно согласиться на обработку персональных данных.");
       return;
     }
     if (form.password.length < 6) {
@@ -81,6 +86,21 @@ export default function RegisterPage() {
         </select>
         <input value={form.password} onChange={set("password")} type="password" placeholder="Пароль (мин. 6 символов) *" className={inputCls} />
         <input value={form.password2} onChange={set("password2")} type="password" placeholder="Повторите пароль *" className={inputCls} />
+        <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+          />
+          <span>
+            Согласен(на) на обработку персональных данных согласно{" "}
+            <Link href="/privacy" className="font-semibold text-accent hover:underline">
+              Политике конфиденциальности
+            </Link>
+            {" "}*
+          </span>
+        </label>
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button
           type="submit"

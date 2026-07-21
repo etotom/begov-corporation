@@ -21,6 +21,7 @@ export default function VinClient() {
   const [requestSent, setRequestSent] = useState(false);
   const [reqPhone, setReqPhone] = useState("");
   const [reqMessage, setReqMessage] = useState("");
+  const [reqConsent, setReqConsent] = useState(false);
   const [reqError, setReqError] = useState("");
 
   const findField = (label: string) => result?.find((f) => f.label === label)?.value ?? "";
@@ -36,6 +37,10 @@ export default function VinClient() {
     const phone = reqPhone.trim() || user?.phone || "";
     if (!phone) {
       setReqError("Укажите телефон, чтобы менеджер мог с вами связаться.");
+      return;
+    }
+    if (!reqConsent) {
+      setReqError("Нужно согласиться на обработку персональных данных.");
       return;
     }
     setReqError("");
@@ -156,8 +161,9 @@ export default function VinClient() {
             {requestOpen && !requestSent && (
               <form onSubmit={sendPhotoRequest} className="mt-4 space-y-3 border-t border-line pt-4">
                 <p className="text-xs leading-relaxed text-muted">
-                  Пришлем реальные фото этого конкретного автомобиля (с аукциона) и отчет
-                  Carfax/AutoCheck по истории ДТП, пробегу и владельцам.
+                  Поможем запросить фото этого конкретного автомобиля (с аукциона) и отчет по
+                  истории ДТП, пробегу и владельцам (Carfax/AutoCheck) — по согласованию с
+                  менеджером и при наличии данных по конкретному лоту.
                 </p>
                 <input
                   value={reqPhone}
@@ -172,6 +178,20 @@ export default function VinClient() {
                   placeholder="Уточнения (необязательно)"
                   className="w-full rounded-lg border border-line bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-accent"
                 />
+                <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted">
+                  <input
+                    type="checkbox"
+                    checked={reqConsent}
+                    onChange={(e) => setReqConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+                  />
+                  <span>
+                    Согласен(на) на обработку персональных данных согласно{" "}
+                    <a href="/privacy" className="font-semibold text-accent hover:underline">
+                      Политике конфиденциальности
+                    </a>
+                  </span>
+                </label>
                 {reqError && <p className="text-xs text-red-400">{reqError}</p>}
                 <div className="flex gap-2">
                   <button
@@ -193,7 +213,8 @@ export default function VinClient() {
 
             {requestSent && (
               <div className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-xs leading-relaxed text-emerald-300">
-                Заявка отправлена! Менеджер пришлет фото и историю ДТП по этому VIN в ближайшее время.
+                Заявка отправлена! Менеджер свяжется с вами и поможет с фото и историей ДТП по
+                этому VIN, если они доступны по конкретному лоту.
               </div>
             )}
           </div>

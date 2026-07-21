@@ -82,9 +82,17 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-muted sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 text-xs text-muted sm:flex-row">
           <span>© {new Date().getFullYear()} Begov Corporation. Все права защищены.</span>
-          <span>Auto Export · Georgia 🇬🇪</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link href="/privacy" className="transition-colors hover:text-accent">
+              Политика конфиденциальности
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-accent">
+              Пользовательское соглашение
+            </Link>
+            <span>Auto Export · Georgia 🇬🇪</span>
+          </div>
         </div>
       </div>
     </footer>
