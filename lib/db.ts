@@ -103,11 +103,12 @@ export async function createUser(input: {
   phone: string;
   country: string;
   passHash: string;
+  role?: "user" | "admin";
 }): Promise<DbUser | "exists"> {
   try {
     const rows = await sql`
-      INSERT INTO users (name, email, phone, country, pass_hash)
-      VALUES (${input.name}, ${input.email.toLowerCase()}, ${input.phone}, ${input.country}, ${input.passHash})
+      INSERT INTO users (name, email, phone, country, pass_hash, role)
+      VALUES (${input.name}, ${input.email.toLowerCase()}, ${input.phone}, ${input.country}, ${input.passHash}, ${input.role ?? "user"})
       RETURNING *`;
     return stripHash(rowToUser(rows[0]));
   } catch (e: unknown) {

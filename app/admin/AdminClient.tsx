@@ -15,7 +15,7 @@ import {
 } from "@/lib/cars";
 import type { DbLead } from "@/lib/db";
 
-type Tab = "leads" | "cars";
+type Tab = "leads" | "cars" | "admins";
 
 // Грубое сопоставление терминов NHTSA vPIC с нашими вариантами в форме
 function mapBody(v: string): string {
@@ -124,6 +124,13 @@ export default function AdminClient({
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [adminName, setAdminName] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminSaving, setAdminSaving] = useState(false);
+  const [adminError, setAdminError] = useState("");
+  const [adminSuccess, setAdminSuccess] = useState("");
 
   const newLeads = useMemo(() => leads.filter((l) => l.status === "new").length, [leads]);
   const hiddenCars = useMemo(() => cars.filter((c) => !c.visible).length, [cars]);
@@ -281,6 +288,36 @@ export default function AdminClient({
     setForm((f) => ({ ...f, photos: [url, ...f.photos.filter((p) => p !== url)] }));
   }
 
+  async function createAdmin(e: React.FormEvent) {
+    e.preventDefault();
+    setAdminError("");
+    setAdminSuccess("");
+    if (!confirm(`Сделать ${adminEmail} администратором? У аккаунта будет полный доступ к панели.`)) {
+      return;
+    }
+    setAdminSaving(true);
+    try {
+      const res = await fetch("/api/admin/create-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: adminName, email: adminEmail, password: adminPassword }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setAdminError(data.error ?? "Не удалось создать администратора");
+        return;
+      }
+      setAdminSuccess(`Готово! ${data.user.email} теперь администратор.`);
+      setAdminName("");
+      setAdminEmail("");
+      setAdminPassword("");
+    } catch {
+      setAdminError("Ошибка соединения");
+    } finally {
+      setAdminSaving(false);
+    }
+  }
+
   async function saveCar(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -398,6 +435,7 @@ export default function AdminClient({
           [
             ["leads", `Заявки${newLeads ? ` · ${newLeads}` : ""}`],
             ["cars", "Каталог"],
+            ["admins", "Добавить администратора"],
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <button
@@ -756,6 +794,50 @@ export default function AdminClient({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Добавить администратора */}
+      {tab === "admins" && (
+        <div className="mt-6 max-w-md">
+          <div className="rounded-2xl border border-line bg-surface p-6">
+            <h3 className="font-display font-semibold">Новый администратор</h3>
+            <p className="mt-2 text-sm text-muted">
+              Создаёт обычный аккаунт с ролью admin — полный доступ к этой панели сразу после
+              создания. Раздавайте доступ только людям, которым доверяете.
+            </p>
+            <form onSubmit={createAdmin} className="mt-5 space-y-3">
+              <input
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                placeholder="Имя (необязательно)"
+                className={inputCls}
+              />
+              <input
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                type="email"
+                placeholder="Email *"
+                className={inputCls}
+              />
+              <input
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                type="password"
+                placeholder="Пароль (мин. 8 символов) *"
+                className={inputCls}
+              />
+              {adminError && <p className="text-sm text-red-400">{adminError}</p>}
+              {adminSuccess && <p className="text-sm text-emerald-400">{adminSuccess}</p>}
+              <button
+                type="submit"
+                disabled={adminSaving || !adminEmail.trim() || adminPassword.length < 8}
+                className="w-full rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-accent-2 disabled:opacity-60"
+              >
+                {adminSaving ? "Создаём…" : "Создать администратора"}
+              </button>
+            </form>
           </div>
         </div>
       )}
