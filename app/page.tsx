@@ -3,6 +3,7 @@ import Link from "next/link";
 import CarCard from "@/components/CarCard";
 import PhotoBanner from "@/components/PhotoBanner";
 import Reveal from "@/components/Reveal";
+import { heroAsset } from "@/lib/asset-version";
 import { getVisibleCars } from "@/lib/db";
 
 // Блок «Авто в наличии» обновляется из БД раз в 2 минуты
@@ -86,7 +87,7 @@ export default async function Home() {
       {/* Hero */}
       <section className="border-b border-line">
         <PhotoBanner
-          src="/hero/carrier-road.jpg"
+          src={heroAsset("/hero/carrier-road.jpg")}
           alt="Автовоз Begov Corporation с автомобилями на трассе"
           overlay="left"
           priority
@@ -213,7 +214,7 @@ export default async function Home() {
 
       {/* Автопарк в деле */}
       <PhotoBanner
-        src="/hero/carrier-highway.jpg"
+        src={heroAsset("/hero/carrier-highway.jpg")}
         alt="Автовоз Begov Corporation везёт автомобили по трассе"
         overlay="full"
         className="min-h-[280px] sm:min-h-[340px]"
@@ -260,7 +261,7 @@ export default async function Home() {
           <Reveal className="order-2 lg:order-1">
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border border-line shadow-xl">
               <Image
-                src="/hero/carrier-front.jpg"
+                src={heroAsset("/hero/carrier-front.jpg")}
                 alt="Тягач Scania с брендингом Begov Corporation"
                 fill
                 className="object-cover"
@@ -318,7 +319,7 @@ export default async function Home() {
 
       {/* CTA */}
       <PhotoBanner
-        src="/hero/port-showcase.jpg"
+        src={heroAsset("/hero/port-showcase.jpg")}
         alt="Автомобиль Begov Corporation готов к отправке из порта"
         overlay="full"
         className="border-t border-line"
