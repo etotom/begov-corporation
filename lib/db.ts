@@ -104,11 +104,12 @@ export async function createUser(input: {
   country: string;
   passHash: string;
   role?: "user" | "admin";
+  authProvider?: string;
 }): Promise<DbUser | "exists"> {
   try {
     const rows = await sql`
-      INSERT INTO users (name, email, phone, country, pass_hash, role)
-      VALUES (${input.name}, ${input.email.toLowerCase()}, ${input.phone}, ${input.country}, ${input.passHash}, ${input.role ?? "user"})
+      INSERT INTO users (name, email, phone, country, pass_hash, role, auth_provider)
+      VALUES (${input.name}, ${input.email.toLowerCase()}, ${input.phone}, ${input.country}, ${input.passHash}, ${input.role ?? "user"}, ${input.authProvider ?? "password"})
       RETURNING *`;
     return stripHash(rowToUser(rows[0]));
   } catch (e: unknown) {

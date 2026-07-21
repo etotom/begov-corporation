@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import GoogleButton from "@/components/GoogleButton";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => searchParams.get("error") ?? "");
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -45,7 +47,17 @@ export default function LoginPage() {
       <h1 className="font-display text-2xl font-bold">Вход</h1>
       <p className="mt-2 text-sm text-muted">Личный кабинет Begov Corporation.</p>
 
-      <form onSubmit={submit} className="mt-8 space-y-4">
+      <div className="mt-8">
+        <GoogleButton label="Войти через Google" />
+      </div>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-muted">
+        <div className="h-px flex-1 bg-line" />
+        или по email
+        <div className="h-px flex-1 bg-line" />
+      </div>
+
+      <form onSubmit={submit} className="space-y-4">
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -77,5 +89,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

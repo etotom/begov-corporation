@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import GoogleButton from "@/components/GoogleButton";
 
 const COUNTRIES = ["Таджикистан", "Узбекистан", "Казахстан", "Кыргызстан", "Россия", "Грузия", "Другая страна"];
 
@@ -75,7 +76,17 @@ export default function RegisterPage() {
         Личный кабинет хранит ваши заявки и расчеты — менеджеру не придется ничего переспрашивать.
       </p>
 
-      <form onSubmit={submit} className="mt-8 space-y-4">
+      <div className="mt-8">
+        <GoogleButton label="Зарегистрироваться через Google" />
+      </div>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-muted">
+        <div className="h-px flex-1 bg-line" />
+        или по email
+        <div className="h-px flex-1 bg-line" />
+      </div>
+
+      <form onSubmit={submit} className="space-y-4">
         <input value={form.name} onChange={set("name")} placeholder="Имя и фамилия *" className={inputCls} />
         <input value={form.email} onChange={set("email")} type="email" placeholder="Email *" className={inputCls} />
         <input value={form.phone} onChange={set("phone")} placeholder="Телефон (WhatsApp / Telegram) *" className={inputCls} />

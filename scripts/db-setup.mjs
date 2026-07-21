@@ -63,8 +63,11 @@ await sql`
     country TEXT NOT NULL DEFAULT '',
     pass_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user',
+    auth_provider TEXT NOT NULL DEFAULT 'password',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`;
+
+await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL DEFAULT 'password'`;
 
 // Формат хэша совпадает с lib/server-auth.ts
 function hashPassword(password) {
