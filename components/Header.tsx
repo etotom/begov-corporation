@@ -11,6 +11,7 @@ const NAV = [
   { href: "/vin", label: "VIN-проверка" },
   { href: "/calculator", label: "Калькулятор" },
   { href: "/services", label: "Услуги" },
+  { href: "/faq", label: "Вопросы" },
   { href: "/about", label: "О компании" },
   { href: "/contacts", label: "Контакты" },
 ];

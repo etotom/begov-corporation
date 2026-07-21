@@ -4,20 +4,36 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { getLeads, type Lead } from "@/lib/leads";
+import type { DbLead } from "@/lib/db";
+
+const STATUS_LABEL: Record<DbLead["status"], string> = {
+  new: "Принята, ожидает обработки",
+  done: "Обработана менеджером",
+};
+
+const STATUS_STYLE: Record<DbLead["status"], string> = {
+  new: "bg-amber-500/15 text-amber-500",
+  done: "bg-emerald-500/15 text-emerald-400",
+};
 
 export default function AccountPage() {
   const { user, ready, refresh } = useAuth();
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<DbLead[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
 
   useEffect(() => {
     if (ready && !user) router.replace("/auth/login");
   }, [ready, user, router]);
 
   useEffect(() => {
-    setLeads(getLeads());
-  }, []);
+    if (!user) return;
+    fetch("/api/leads/mine", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setLeads(data.ok ? data.leads : []))
+      .catch(() => setLeads([]))
+      .finally(() => setLeadsLoading(false));
+  }, [user]);
 
   if (!ready || !user) return null;
 
@@ -54,7 +70,7 @@ export default function AccountPage() {
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3">
                 <dt className="text-muted">{k}</dt>
-                <dd className="font-medium">{v}</dd>
+                <dd className="font-medium">{v || "—"}</dd>
               </div>
             ))}
           </dl>
@@ -95,7 +111,9 @@ export default function AccountPage() {
         <div className="border-b border-line bg-surface-2 px-6 py-4">
           <h2 className="font-display text-sm font-semibold">Мои заявки</h2>
         </div>
-        {leads.length === 0 ? (
+        {leadsLoading ? (
+          <div className="p-8 text-center text-sm text-muted">Загружаем…</div>
+        ) : leads.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted">
             Заявок пока нет. Оставьте первую —{" "}
             <Link href="/contacts" className="font-semibold text-accent hover:underline">
@@ -106,34 +124,36 @@ export default function AccountPage() {
         ) : (
           <ul className="divide-y divide-line/60">
             {leads.map((lead) => (
-              <li key={lead.id} className="flex flex-wrap items-baseline justify-between gap-2 px-6 py-4">
-                <div>
-                  <div className="text-sm font-semibold">
-                    <span className="mr-2 rounded bg-accent/15 px-2 py-0.5 text-[11px] font-bold text-accent">
-                      {lead.type}
-                    </span>
-                    {lead.summary}
+              <li key={lead.id} className="px-6 py-4">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-semibold">
+                      <span className="mr-2 rounded bg-accent/15 px-2 py-0.5 text-[11px] font-bold text-accent">
+                        {lead.type}
+                      </span>
+                      {lead.summary}
+                    </div>
+                    {lead.details && <div className="mt-1 text-xs text-muted">{lead.details}</div>}
                   </div>
-                  {lead.details && <div className="mt-1 text-xs text-muted">{lead.details}</div>}
+                  <time className="shrink-0 text-xs text-muted">
+                    {new Date(lead.createdAt).toLocaleDateString("ru-RU", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </time>
                 </div>
-                <time className="text-xs text-muted">
-                  {new Date(lead.createdAt).toLocaleDateString("ru-RU", {
-                    day: "numeric",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </time>
+                <span
+                  className={`mt-2 inline-block rounded px-2 py-0.5 text-[11px] font-bold ${STATUS_STYLE[lead.status]}`}
+                >
+                  {STATUS_LABEL[lead.status]}
+                </span>
               </li>
             ))}
           </ul>
         )}
       </div>
-
-      <p className="mt-6 text-xs leading-relaxed text-muted">
-        Данные кабинета в текущей версии хранятся в вашем браузере. После подключения базы данных
-        заявки будут синхронизироваться между устройствами и попадать напрямую к менеджеру.
-      </p>
     </div>
   );
 }

@@ -28,6 +28,7 @@ export interface DbLead {
   country: string;
   status: "new" | "done";
   createdAt: string;
+  userId: number | null;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -64,6 +65,7 @@ function rowToLead(r: any): DbLead {
     country: r.country ?? "",
     status: r.status,
     createdAt: r.created_at,
+    userId: r.user_id ?? null,
   };
 }
 function rowToUser(r: any): DbUserWithHash {
@@ -169,16 +171,22 @@ export async function createLead(input: {
   name?: string;
   phone?: string;
   country?: string;
+  userId?: number | null;
 }): Promise<DbLead> {
   const rows = await sql`
-    INSERT INTO leads (type, summary, details, name, phone, country)
-    VALUES (${input.type}, ${input.summary}, ${input.details ?? ""}, ${input.name ?? ""}, ${input.phone ?? ""}, ${input.country ?? ""})
+    INSERT INTO leads (type, summary, details, name, phone, country, user_id)
+    VALUES (${input.type}, ${input.summary}, ${input.details ?? ""}, ${input.name ?? ""}, ${input.phone ?? ""}, ${input.country ?? ""}, ${input.userId ?? null})
     RETURNING *`;
   return rowToLead(rows[0]);
 }
 
 export async function getLeads(): Promise<DbLead[]> {
   const rows = await sql`SELECT * FROM leads ORDER BY created_at DESC`;
+  return rows.map(rowToLead);
+}
+
+export async function getLeadsByUser(userId: number): Promise<DbLead[]> {
+  const rows = await sql`SELECT * FROM leads WHERE user_id = ${userId} ORDER BY created_at DESC`;
   return rows.map(rowToLead);
 }
 

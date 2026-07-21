@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createLead } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { getSessionUser } from "@/lib/server-auth";
 
 const MAX = 2000;
 const clip = (v: unknown) => String(v ?? "").slice(0, MAX);
@@ -15,13 +16,15 @@ export async function POST(request: Request) {
     const type = clip(b.type) || "Вопрос";
     const summary = clip(b.summary);
     if (!summary) return NextResponse.json({ ok: false, error: "Пустая заявка" }, { status: 400 });
+    const user = await getSessionUser();
     await createLead({
       type,
       summary,
       details: clip(b.details),
-      name: clip(b.name),
-      phone: clip(b.phone),
-      country: clip(b.country),
+      name: clip(b.name) || user?.name || "",
+      phone: clip(b.phone) || user?.phone || "",
+      country: clip(b.country) || user?.country || "",
+      userId: user?.id ?? null,
     });
     return NextResponse.json({ ok: true });
   } catch {

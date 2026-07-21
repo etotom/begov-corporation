@@ -31,6 +31,7 @@ export default function Footer() {
               ["/vin", "Проверка по VIN"],
               ["/calculator", "Калькулятор доставки"],
               ["/services", "Услуги"],
+              ["/faq", "Частые вопросы"],
               ["/about", "О компании"],
               ["/contacts", "Контакты"],
             ].map(([href, label]) => (

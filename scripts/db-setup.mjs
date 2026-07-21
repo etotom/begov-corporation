@@ -69,6 +69,9 @@ await sql`
 
 await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL DEFAULT 'password'`;
 
+// user_id — после создания users, чтобы FK мог сослаться на существующую таблицу
+await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id)`;
+
 // Формат хэша совпадает с lib/server-auth.ts
 function hashPassword(password) {
   const salt = randomBytes(16).toString("hex");
