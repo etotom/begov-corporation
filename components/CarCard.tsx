@@ -45,71 +45,79 @@ const STATUS_STYLE: Record<Car["status"], string> = {
 };
 
 export default function CarCard({ car }: { car: Car }) {
+  const cover = car.photos[0];
   return (
     <article className="card-glow flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow">
-      <div className="relative bg-gradient-to-br from-surface-2 to-background">
-        <div className="absolute left-4 top-4 z-10 flex gap-2">
-          <span className="rounded-md bg-accent/15 px-2 py-1 text-[11px] font-bold text-accent backdrop-blur-sm">
-            {car.source}
-          </span>
-          <span
-            className={`rounded-md px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${STATUS_STYLE[car.status]}`}
-          >
-            {car.status}
-          </span>
-        </div>
-        {car.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={car.photoUrl}
-            alt={`${car.make} ${car.model} ${car.year}`}
-            className="h-44 w-full object-cover"
-          />
-        ) : (
-          <div className="p-6">
-            <div className="mt-6 h-28 text-accent/80">
-              <Silhouette body={car.body} />
-            </div>
+      <Link href={`/catalog/${car.id}`} className="contents">
+        <div className="relative bg-gradient-to-br from-surface-2 to-background">
+          <div className="absolute left-4 top-4 z-10 flex gap-2">
+            <span className="rounded-md bg-accent/15 px-2 py-1 text-[11px] font-bold text-accent backdrop-blur-sm">
+              {car.source}
+            </span>
+            <span
+              className={`rounded-md px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${STATUS_STYLE[car.status]}`}
+            >
+              {car.status}
+            </span>
+            {car.photos.length > 1 && (
+              <span className="rounded-md bg-foreground/70 px-2 py-1 text-[11px] font-bold text-white backdrop-blur-sm">
+                📷 {car.photos.length}
+              </span>
+            )}
           </div>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="font-display text-[15px] font-semibold">
-            {car.make} {car.model}
-          </h3>
-          <span className="text-sm text-muted">{car.year}</span>
-        </div>
-
-        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
-          {[
-            ["Пробег", formatKm(car.mileageKm)],
-            ["Двигатель", car.engine],
-            ["Топливо", car.fuel],
-            ["Привод", car.drive],
-            ["КПП", car.gearbox],
-            ["Цвет", car.color],
-          ].map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-2 border-b border-line/60 pb-1.5">
-              <dt className="text-muted">{k}</dt>
-              <dd className="font-medium">{v}</dd>
+          {cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={cover}
+              alt={`${car.make} ${car.model} ${car.year}`}
+              className="h-44 w-full object-cover"
+            />
+          ) : (
+            <div className="p-6">
+              <div className="mt-6 h-28 text-accent/80">
+                <Silhouette body={car.body} />
+              </div>
             </div>
-          ))}
-        </dl>
-
-        <div className="mt-auto flex items-center justify-between pt-5">
-          <div>
-            <div className="font-display text-lg font-bold text-accent">{formatPrice(car.price)}</div>
-            <div className="text-[11px] text-muted">до Грузии, без доставки в ваш город</div>
-          </div>
-          <Link
-            href={`/contacts?car=${encodeURIComponent(`${car.make} ${car.model} ${car.year}`)}`}
-            className="rounded-lg bg-accent px-3.5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-accent-2"
-          >
-            Запросить
-          </Link>
+          )}
         </div>
+
+        <div className="flex flex-1 flex-col p-5">
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="font-display text-[15px] font-semibold">
+              {car.make} {car.model}
+            </h3>
+            <span className="text-sm text-muted">{car.year}</span>
+          </div>
+
+          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+            {[
+              ["Пробег", formatKm(car.mileageKm)],
+              ["Двигатель", car.engine],
+              ["Топливо", car.fuel],
+              ["Привод", car.drive],
+              ["КПП", car.gearbox],
+              ["Цвет", car.color],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-2 border-b border-line/60 pb-1.5">
+                <dt className="text-muted">{k}</dt>
+                <dd className="font-medium">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </Link>
+
+      <div className="flex items-center justify-between gap-2 px-5 pb-5">
+        <div>
+          <div className="font-display text-lg font-bold text-accent">{formatPrice(car.price)}</div>
+          <div className="text-[11px] text-muted">до Грузии, без доставки в ваш город</div>
+        </div>
+        <Link
+          href={`/contacts?car=${encodeURIComponent(`${car.make} ${car.model} ${car.year}`)}`}
+          className="rounded-lg bg-accent px-3.5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-accent-2"
+        >
+          Запросить
+        </Link>
       </div>
     </article>
   );

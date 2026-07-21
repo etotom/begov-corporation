@@ -5,6 +5,7 @@ export type CarStatus = "В наличии в Грузии" | "В пути" | "�
 export const CAR_SOURCES: CarSource[] = ["США", "Европа", "ОАЭ"];
 export const CAR_BODIES: CarBody[] = ["Седан", "Кроссовер", "Внедорожник"];
 export const CAR_STATUSES: CarStatus[] = ["В наличии в Грузии", "В пути", "Под заказ"];
+export const MAX_CAR_PHOTOS = 10;
 
 export interface Car {
   id: number;
@@ -21,7 +22,7 @@ export interface Car {
   color: string;
   source: CarSource;
   status: CarStatus;
-  photoUrl: string | null;
+  photos: string[];
   listingUrl: string | null;
   visible: boolean;
 }

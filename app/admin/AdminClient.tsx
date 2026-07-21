@@ -8,6 +8,7 @@ import {
   CAR_BODIES,
   CAR_SOURCES,
   CAR_STATUSES,
+  MAX_CAR_PHOTOS,
   formatKm,
   formatPrice,
   type Car,
@@ -60,7 +61,7 @@ const emptyForm = {
   color: "",
   source: "США",
   status: "В наличии в Грузии",
-  photoUrl: "",
+  photos: [] as string[],
   listingUrl: "",
   visible: true,
 };
@@ -82,7 +83,7 @@ function carToForm(c: Car): CarForm {
     color: c.color,
     source: c.source,
     status: c.status,
-    photoUrl: c.photoUrl ?? "",
+    photos: c.photos,
     listingUrl: c.listingUrl ?? "",
     visible: c.visible,
   };
@@ -171,7 +172,7 @@ export default function AdminClient({
         setForm({
           ...emptyForm,
           listingUrl: url,
-          photoUrl: data.data.image ?? "",
+          photos: data.data.image ? [data.data.image] : [],
           price: data.data.price ? String(data.data.price) : "",
         });
         setLookupHint({ title: data.data.title, description: data.data.description });
@@ -239,23 +240,45 @@ export default function AdminClient({
     }
   }
 
-  async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  async function handlePhotoFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
+
+    const room = MAX_CAR_PHOTOS - form.photos.length;
+    if (room <= 0) {
+      setPhotoError(`Максимум ${MAX_CAR_PHOTOS} фото на авто.`);
+      return;
+    }
+    const toUpload = files.slice(0, room);
     setPhotoError("");
     setPhotoUploading(true);
     try {
-      const blob = await upload(`cars/${Date.now()}-${file.name}`, file, {
-        access: "public",
-        handleUploadUrl: "/api/admin/upload",
-      });
-      set("photoUrl")(blob.url);
+      const uploaded: string[] = [];
+      for (const file of toUpload) {
+        const blob = await upload(`cars/${Date.now()}-${file.name}`, file, {
+          access: "public",
+          handleUploadUrl: "/api/admin/upload",
+        });
+        uploaded.push(blob.url);
+      }
+      setForm((f) => ({ ...f, photos: [...f.photos, ...uploaded] }));
+      if (files.length > room) {
+        setPhotoError(`Загружено ${room} из ${files.length} — лимит ${MAX_CAR_PHOTOS} фото на авто.`);
+      }
     } catch {
-      setPhotoError("Не удалось загрузить фото — попробуйте другой файл.");
+      setPhotoError("Не удалось загрузить одно из фото — попробуйте ещё раз.");
     } finally {
       setPhotoUploading(false);
     }
+  }
+
+  function removePhoto(url: string) {
+    setForm((f) => ({ ...f, photos: f.photos.filter((p) => p !== url) }));
+  }
+
+  function makeCoverPhoto(url: string) {
+    setForm((f) => ({ ...f, photos: [url, ...f.photos.filter((p) => p !== url)] }));
   }
 
   async function saveCar(e: React.FormEvent) {
@@ -556,43 +579,62 @@ export default function AdminClient({
                   {CAR_STATUSES.map((v) => <option key={v}>{v}</option>)}
                 </select>
                 <div className="sm:col-span-2 lg:col-span-3">
-                  <div className="flex items-center gap-3">
-                    {form.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={form.photoUrl}
-                        alt="Фото авто"
-                        className="h-16 w-24 shrink-0 rounded-lg border border-line object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-line bg-surface-2 text-xl text-muted">
-                        🚗
+                  <label className="text-xs font-semibold text-muted">
+                    Фото ({form.photos.length}/{MAX_CAR_PHOTOS}) — первое фото становится обложкой
+                  </label>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    {form.photos.map((url, i) => (
+                      <div key={url} className="group relative h-20 w-28 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Фото ${i + 1}`}
+                          className={`h-full w-full rounded-lg border-2 object-cover ${i === 0 ? "border-accent" : "border-line"}`}
+                        />
+                        {i === 0 && (
+                          <span className="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 text-[10px] font-bold text-white">
+                            Обложка
+                          </span>
+                        )}
+                        <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 bg-foreground/70 py-1 opacity-0 transition-opacity group-hover:opacity-100">
+                          {i !== 0 && (
+                            <button
+                              type="button"
+                              onClick={() => makeCoverPhoto(url)}
+                              title="Сделать обложкой"
+                              className="text-xs text-white hover:text-accent"
+                            >
+                              ★
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(url)}
+                            title="Удалить фото"
+                            className="text-xs text-white hover:text-red-400"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex flex-col items-start gap-1.5">
+                    ))}
+                    {form.photos.length < MAX_CAR_PHOTOS && (
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={photoUploading}
-                        className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                        className="flex h-20 w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line text-xs font-semibold text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
                       >
-                        {photoUploading ? "Загружаем…" : form.photoUrl ? "Заменить фото" : "Загрузить фото"}
+                        <span className="text-lg">＋</span>
+                        {photoUploading ? "Загружаем…" : "Добавить фото"}
                       </button>
-                      {form.photoUrl && (
-                        <button
-                          type="button"
-                          onClick={() => set("photoUrl")("")}
-                          className="text-xs text-muted hover:text-red-400"
-                        >
-                          Убрать фото
-                        </button>
-                      )}
-                    </div>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
-                      onChange={handlePhotoFile}
+                      multiple
+                      onChange={handlePhotoFiles}
                       className="hidden"
                     />
                   </div>
@@ -643,10 +685,10 @@ export default function AdminClient({
                 }`}
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  {car.photoUrl ? (
+                  {car.photos[0] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={car.photoUrl}
+                      src={car.photos[0]}
                       alt={`${car.make} ${car.model}`}
                       className="h-14 w-20 rounded-lg border border-line object-cover"
                     />
@@ -673,6 +715,9 @@ export default function AdminClient({
                         <span className="rounded bg-red-500/15 px-1.5 py-0.5 font-bold text-red-400">
                           Скрыто
                         </span>
+                      )}
+                      {car.photos.length > 0 && (
+                        <span className="text-muted">📷 {car.photos.length}</span>
                       )}
                       {car.listingUrl && (
                         <a

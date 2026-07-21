@@ -1,4 +1,4 @@
-import { CAR_BODIES, CAR_SOURCES, CAR_STATUSES, type CarInput } from "@/lib/cars";
+import { CAR_BODIES, CAR_SOURCES, CAR_STATUSES, MAX_CAR_PHOTOS, type CarInput } from "@/lib/cars";
 
 // Валидация формы автомобиля из админки
 export function carInputFromBody(
@@ -40,7 +40,9 @@ export function carInputFromBody(
       color: str("color"),
       source: source as CarInput["source"],
       status: status as CarInput["status"],
-      photoUrl: str("photoUrl") || null,
+      photos: Array.isArray(b.photos)
+        ? b.photos.map((p) => String(p ?? "").trim()).filter(Boolean).slice(0, MAX_CAR_PHOTOS)
+        : [],
       listingUrl: str("listingUrl") || null,
       visible: b.visible !== false,
     },

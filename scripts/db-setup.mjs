@@ -29,12 +29,17 @@ await sql`
     source TEXT NOT NULL DEFAULT 'США',
     status TEXT NOT NULL DEFAULT 'Под заказ',
     photo_url TEXT,
+    photos TEXT[] NOT NULL DEFAULT '{}',
     listing_url TEXT,
     visible BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`;
 
 await sql`ALTER TABLE cars ADD COLUMN IF NOT EXISTS listing_url TEXT`;
+await sql`ALTER TABLE cars ADD COLUMN IF NOT EXISTS photos TEXT[] NOT NULL DEFAULT '{}'`;
+await sql`
+  UPDATE cars SET photos = ARRAY[photo_url]
+  WHERE photo_url IS NOT NULL AND photo_url <> '' AND array_length(photos, 1) IS NULL`;
 
 await sql`
   CREATE TABLE IF NOT EXISTS leads (
