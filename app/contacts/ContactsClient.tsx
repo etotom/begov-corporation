@@ -31,7 +31,10 @@ export default function ContactsClient() {
     saveLead({
       type: carParam ? "Заявка по авто" : "Подбор авто",
       summary: carParam || "Заявка с формы контактов",
-      details: `${finalName}, ${finalPhone}, ${country}. ${message}`.trim(),
+      details: message.trim(),
+      name: finalName,
+      phone: finalPhone,
+      country,
     });
     setSent(true);
   }

@@ -47,18 +47,31 @@ const STATUS_STYLE: Record<Car["status"], string> = {
 export default function CarCard({ car }: { car: Car }) {
   return (
     <article className="card-glow flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow">
-      <div className="relative bg-gradient-to-br from-surface-2 to-background p-6">
-        <div className="absolute left-4 top-4 flex gap-2">
-          <span className="rounded-md bg-accent/15 px-2 py-1 text-[11px] font-bold text-accent">
+      <div className="relative bg-gradient-to-br from-surface-2 to-background">
+        <div className="absolute left-4 top-4 z-10 flex gap-2">
+          <span className="rounded-md bg-accent/15 px-2 py-1 text-[11px] font-bold text-accent backdrop-blur-sm">
             {car.source}
           </span>
-          <span className={`rounded-md px-2 py-1 text-[11px] font-bold ${STATUS_STYLE[car.status]}`}>
+          <span
+            className={`rounded-md px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${STATUS_STYLE[car.status]}`}
+          >
             {car.status}
           </span>
         </div>
-        <div className="mt-6 h-28 text-accent/80">
-          <Silhouette body={car.body} />
-        </div>
+        {car.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={car.photoUrl}
+            alt={`${car.make} ${car.model} ${car.year}`}
+            className="h-44 w-full object-cover"
+          />
+        ) : (
+          <div className="p-6">
+            <div className="mt-6 h-28 text-accent/80">
+              <Silhouette body={car.body} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-5">

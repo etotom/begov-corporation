@@ -1,6 +1,9 @@
 import Link from "next/link";
 import CarCard from "@/components/CarCard";
-import { CARS } from "@/lib/cars";
+import { getVisibleCars } from "@/lib/db";
+
+// Блок «Авто в наличии» обновляется из БД раз в 2 минуты
+export const revalidate = 120;
 
 const STEPS = [
   {
@@ -68,8 +71,12 @@ const GEO = [
   { flag: "🇷🇺", country: "Россия", cities: "Москва и регионы" },
 ];
 
-export default function Home() {
-  const featured = CARS.filter((c) => c.status === "В наличии в Грузии").slice(0, 3);
+export default async function Home() {
+  const cars = await getVisibleCars();
+  const featured = [
+    ...cars.filter((c) => c.status === "В наличии в Грузии"),
+    ...cars.filter((c) => c.status !== "В наличии в Грузии"),
+  ].slice(0, 3);
 
   return (
     <>

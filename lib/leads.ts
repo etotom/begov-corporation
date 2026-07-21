@@ -1,11 +1,14 @@
-// Заявки клиента: сохраняются локально (видны в личном кабинете) и отправляются
-// на /api/lead — там позже подключается CRM / Telegram-бот / почта.
+// Заявки: уходят в базу через /api/lead (видны в админке) и дублируются
+// в localStorage — для истории в личном кабинете клиента.
 
 export interface Lead {
   id: string;
   type: "Подбор авто" | "Расчет доставки" | "Вопрос" | "Заявка по авто";
   summary: string;
   details?: string;
+  name?: string;
+  phone?: string;
+  country?: string;
   createdAt: string;
 }
 

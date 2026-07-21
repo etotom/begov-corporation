@@ -2,217 +2,30 @@ export type CarSource = "США" | "Европа" | "ОАЭ";
 export type CarBody = "Седан" | "Кроссовер" | "Внедорожник";
 export type CarStatus = "В наличии в Грузии" | "В пути" | "Под заказ";
 
+export const CAR_SOURCES: CarSource[] = ["США", "Европа", "ОАЭ"];
+export const CAR_BODIES: CarBody[] = ["Седан", "Кроссовер", "Внедорожник"];
+export const CAR_STATUSES: CarStatus[] = ["В наличии в Грузии", "В пути", "Под заказ"];
+
 export interface Car {
-  id: string;
+  id: number;
   make: string;
   model: string;
   year: number;
   price: number; // USD, до Грузии (Поти), без доставки в страну клиента
   mileageKm: number;
   engine: string;
-  fuel: "Бензин" | "Дизель" | "Гибрид";
-  gearbox: "Автомат" | "Механика";
-  drive: "Передний" | "Задний" | "Полный";
+  fuel: string;
+  gearbox: string;
+  drive: string;
   body: CarBody;
   color: string;
   source: CarSource;
   status: CarStatus;
+  photoUrl: string | null;
+  visible: boolean;
 }
 
-export const CARS: Car[] = [
-  {
-    id: "camry-2021",
-    make: "Toyota",
-    model: "Camry SE",
-    year: 2021,
-    price: 17900,
-    mileageKm: 45000,
-    engine: "2.5 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Передний",
-    body: "Седан",
-    color: "Белый",
-    source: "США",
-    status: "В наличии в Грузии",
-  },
-  {
-    id: "sonata-2021",
-    make: "Hyundai",
-    model: "Sonata",
-    year: 2021,
-    price: 15800,
-    mileageKm: 38000,
-    engine: "2.5 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Передний",
-    body: "Седан",
-    color: "Серый",
-    source: "США",
-    status: "В наличии в Грузии",
-  },
-  {
-    id: "k5-2022",
-    make: "Kia",
-    model: "K5 GT-Line",
-    year: 2022,
-    price: 16900,
-    mileageKm: 29000,
-    engine: "1.6 л Turbo",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Передний",
-    body: "Седан",
-    color: "Черный",
-    source: "США",
-    status: "В пути",
-  },
-  {
-    id: "rav4-2021",
-    make: "Toyota",
-    model: "RAV4 XLE",
-    year: 2021,
-    price: 21500,
-    mileageKm: 42000,
-    engine: "2.5 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Полный",
-    body: "Кроссовер",
-    color: "Синий",
-    source: "США",
-    status: "В наличии в Грузии",
-  },
-  {
-    id: "crv-2020",
-    make: "Honda",
-    model: "CR-V EX",
-    year: 2020,
-    price: 18400,
-    mileageKm: 55000,
-    engine: "1.5 л Turbo",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Полный",
-    body: "Кроссовер",
-    color: "Серебристый",
-    source: "США",
-    status: "В пути",
-  },
-  {
-    id: "tucson-2022",
-    make: "Hyundai",
-    model: "Tucson",
-    year: 2022,
-    price: 19700,
-    mileageKm: 31000,
-    engine: "2.5 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Полный",
-    body: "Кроссовер",
-    color: "Зеленый",
-    source: "США",
-    status: "Под заказ",
-  },
-  {
-    id: "malibu-2020",
-    make: "Chevrolet",
-    model: "Malibu",
-    year: 2020,
-    price: 12900,
-    mileageKm: 60000,
-    engine: "1.5 л Turbo",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Передний",
-    body: "Седан",
-    color: "Красный",
-    source: "США",
-    status: "В наличии в Грузии",
-  },
-  {
-    id: "sportage-2022",
-    make: "Kia",
-    model: "Sportage",
-    year: 2022,
-    price: 19900,
-    mileageKm: 27000,
-    engine: "2.0 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Полный",
-    body: "Кроссовер",
-    color: "Белый",
-    source: "США",
-    status: "В пути",
-  },
-  {
-    id: "e200-2019",
-    make: "Mercedes-Benz",
-    model: "E 200",
-    year: 2019,
-    price: 27500,
-    mileageKm: 78000,
-    engine: "2.0 л Turbo",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Задний",
-    body: "Седан",
-    color: "Черный",
-    source: "Европа",
-    status: "В наличии в Грузии",
-  },
-  {
-    id: "520d-2020",
-    make: "BMW",
-    model: "520d",
-    year: 2020,
-    price: 28900,
-    mileageKm: 69000,
-    engine: "2.0 л",
-    fuel: "Дизель",
-    gearbox: "Автомат",
-    drive: "Задний",
-    body: "Седан",
-    color: "Серый",
-    source: "Европа",
-    status: "Под заказ",
-  },
-  {
-    id: "prado-2021",
-    make: "Toyota",
-    model: "Land Cruiser Prado",
-    year: 2021,
-    price: 33900,
-    mileageKm: 52000,
-    engine: "2.7 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Полный",
-    body: "Внедорожник",
-    color: "Белый",
-    source: "ОАЭ",
-    status: "В наличии в Грузии",
-  },
-  {
-    id: "rx350-2021",
-    make: "Lexus",
-    model: "RX 350",
-    year: 2021,
-    price: 36500,
-    mileageKm: 44000,
-    engine: "3.5 л",
-    fuel: "Бензин",
-    gearbox: "Автомат",
-    drive: "Полный",
-    body: "Кроссовер",
-    color: "Черный",
-    source: "ОАЭ",
-    status: "В пути",
-  },
-];
+export type CarInput = Omit<Car, "id">;
 
 export const formatPrice = (n: number) => `$${n.toLocaleString("en-US")}`;
 export const formatKm = (n: number) => `${n.toLocaleString("ru-RU")} км`;

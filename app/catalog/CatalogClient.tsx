@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import CarCard from "@/components/CarCard";
-import { CARS, type CarBody, type CarSource, type CarStatus } from "@/lib/cars";
+import type { Car, CarBody, CarSource, CarStatus } from "@/lib/cars";
 
 const SOURCES: (CarSource | "Все")[] = ["Все", "США", "Европа", "ОАЭ"];
 const BODIES: (CarBody | "Все")[] = ["Все", "Седан", "Кроссовер", "Внедорожник"];
 const STATUSES: (CarStatus | "Все")[] = ["Все", "В наличии в Грузии", "В пути", "Под заказ"];
 
-export default function CatalogClient() {
+export default function CatalogClient({ cars: allCars }: { cars: Car[] }) {
   const [source, setSource] = useState<(typeof SOURCES)[number]>("Все");
   const [body, setBody] = useState<(typeof BODIES)[number]>("Все");
   const [status, setStatus] = useState<(typeof STATUSES)[number]>("Все");
@@ -17,7 +17,7 @@ export default function CatalogClient() {
   const [query, setQuery] = useState("");
 
   const cars = useMemo(() => {
-    let list = CARS.filter(
+    let list = allCars.filter(
       (c) =>
         (source === "Все" || c.source === source) &&
         (body === "Все" || c.body === body) &&
@@ -29,7 +29,7 @@ export default function CatalogClient() {
     if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
     if (sort === "year-desc") list = [...list].sort((a, b) => b.year - a.year);
     return list;
-  }, [source, body, status, sort, query]);
+  }, [allCars, source, body, status, sort, query]);
 
   const selectCls =
     "rounded-lg border border-line bg-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-accent";

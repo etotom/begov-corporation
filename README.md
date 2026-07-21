@@ -18,14 +18,28 @@
 | Контакты | `/contacts` | Форма заявки + контакты |
 | Регистрация / Вход | `/auth/register`, `/auth/login` | Личный кабинет |
 | Кабинет | `/account` | Профиль и история заявок |
+| **Админка** | `/admin` | Заявки клиентов + управление каталогом (вход по `ADMIN_PASSWORD`) |
 
 ## Запуск
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # продакшен-сборка
+vercel env pull .env.local   # DATABASE_URL (Neon) + ADMIN_PASSWORD
+npm run db:setup             # создать таблицы (+ сид каталога, если пусто)
+npm run dev                  # http://localhost:3000
+npm run build                # продакшен-сборка
 ```
+
+## База данных и админка
+
+- **БД**: Neon Postgres через Vercel Marketplace (ресурс `neon-fuchsia-lighthouse`).
+  Таблицы: `cars` (каталог), `leads` (заявки). Схема — в `scripts/db-setup.mjs`.
+- **Админка** `/admin`: заявки (статусы новая/обработана, удаление) и каталог
+  (добавить / изменить / скрыть / удалить, фото по ссылке). Вход по паролю из
+  env-переменной `ADMIN_PASSWORD` (задана в Vercel; сменить: `vercel env rm ADMIN_PASSWORD`
+  + `vercel env add`, после смены все сессии сбрасываются).
+- Заявки с форм сайта летят в БД и видны в админке; в личном кабинете клиента
+  хранится локальная копия его заявок.
 
 ## Что заменить перед запуском в продакшен
 
