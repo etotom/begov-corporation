@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { logout } from "@/lib/auth";
 import { getLeads, type Lead } from "@/lib/leads";
 
 export default function AccountPage() {
-  const { user, ready } = useAuth();
+  const { user, ready, refresh } = useAuth();
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
 
@@ -30,8 +29,9 @@ export default function AccountPage() {
           <p className="mt-2 text-sm text-muted">Добро пожаловать, {user.name}!</p>
         </div>
         <button
-          onClick={() => {
-            logout();
+          onClick={async () => {
+            await fetch("/api/auth/logout", { method: "POST" });
+            await refresh();
             router.push("/");
           }}
           className="rounded-xl border border-line px-5 py-2.5 text-sm font-semibold text-muted transition-colors hover:border-red-400 hover:text-red-400"
@@ -65,6 +65,14 @@ export default function AccountPage() {
             Быстрые действия
           </h2>
           <div className="mt-4 flex flex-col gap-2.5">
+            {user.role === "admin" && (
+              <Link
+                href="/admin"
+                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-background transition-colors hover:bg-accent-2"
+              >
+                ⚙ Admin — панель управления
+              </Link>
+            )}
             {[
               ["/contacts", "Оставить заявку на подбор"],
               ["/calculator", "Рассчитать доставку"],

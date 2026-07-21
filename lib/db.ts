@@ -3,6 +3,20 @@ import type { Car, CarInput } from "@/lib/cars";
 
 const sql = neon(process.env.DATABASE_URL!);
 
+export interface DbUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  role: "user" | "admin";
+  createdAt: string;
+}
+
+export interface DbUserWithHash extends DbUser {
+  passHash: string;
+}
+
 export interface DbLead {
   id: number;
   type: string;
@@ -50,7 +64,55 @@ function rowToLead(r: any): DbLead {
     createdAt: r.created_at,
   };
 }
+function rowToUser(r: any): DbUserWithHash {
+  return {
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    phone: r.phone ?? "",
+    country: r.country ?? "",
+    role: r.role === "admin" ? "admin" : "user",
+    createdAt: r.created_at,
+    passHash: r.pass_hash,
+  };
+}
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+// --- Пользователи ---
+
+function stripHash(u: DbUserWithHash): DbUser {
+  const { passHash: _passHash, ...user } = u;
+  return user;
+}
+
+export async function getUserByEmail(email: string): Promise<DbUserWithHash | null> {
+  const rows = await sql`SELECT * FROM users WHERE email = ${email.toLowerCase()}`;
+  return rows[0] ? rowToUser(rows[0]) : null;
+}
+
+export async function getUserById(id: number): Promise<DbUser | null> {
+  const rows = await sql`SELECT * FROM users WHERE id = ${id}`;
+  return rows[0] ? stripHash(rowToUser(rows[0])) : null;
+}
+
+export async function createUser(input: {
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  passHash: string;
+}): Promise<DbUser | "exists"> {
+  try {
+    const rows = await sql`
+      INSERT INTO users (name, email, phone, country, pass_hash)
+      VALUES (${input.name}, ${input.email.toLowerCase()}, ${input.phone}, ${input.country}, ${input.passHash})
+      RETURNING *`;
+    return stripHash(rowToUser(rows[0]));
+  } catch (e: unknown) {
+    if (typeof e === "object" && e !== null && "code" in e && e.code === "23505") return "exists";
+    throw e;
+  }
+}
 
 // --- Каталог ---
 

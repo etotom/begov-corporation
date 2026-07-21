@@ -1,11 +1,26 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { AUTH_EVENT, getCurrentUser, type User } from "@/lib/auth";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-const AuthContext = createContext<{ user: User | null; ready: boolean }>({
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  country: string;
+  role: "user" | "admin";
+}
+
+interface AuthContextValue {
+  user: AuthUser | null;
+  ready: boolean;
+  refresh: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue>({
   user: null,
   ready: false,
+  refresh: async () => {},
 });
 
 export function useAuth() {
@@ -13,20 +28,24 @@ export function useAuth() {
 }
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    const sync = () => setUser(getCurrentUser());
-    sync();
-    setReady(true);
-    window.addEventListener(AUTH_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(AUTH_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const data = await res.json();
+      setUser(data.user ?? null);
+    } catch {
+      setUser(null);
+    } finally {
+      setReady(true);
+    }
   }, []);
 
-  return <AuthContext.Provider value={{ user, ready }}>{children}</AuthContext.Provider>;
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  return <AuthContext.Provider value={{ user, ready, refresh }}>{children}</AuthContext.Provider>;
 }

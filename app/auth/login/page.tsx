@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { login } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,12 +17,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await login(email, password);
-    setLoading(false);
-    if (res.ok) {
-      router.push("/account");
-    } else {
-      setError(res.error);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await refresh();
+        router.push(data.user?.role === "admin" ? "/admin" : "/account");
+      } else {
+        setError(data.error ?? "Не удалось войти");
+      }
+    } catch {
+      setError("Ошибка соединения, попробуйте еще раз.");
+    } finally {
+      setLoading(false);
     }
   }
 

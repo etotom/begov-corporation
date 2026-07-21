@@ -1,5 +1,8 @@
-// Создание таблиц и стартовое наполнение каталога.
+// Создание таблиц, стартовое наполнение каталога и учетка админа.
 // Запуск: npm run db:setup (использует .env.local)
+// Админ: берется из ADMIN_EMAIL + ADMIN_PASSWORD; повторный запуск обновляет
+// пароль админа из env (env — источник истины).
+import { randomBytes, scryptSync } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 
 const url = process.env.DATABASE_URL;
@@ -42,6 +45,38 @@ await sql`
     status TEXT NOT NULL DEFAULT 'new',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`;
+
+await sql`
+  CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    phone TEXT NOT NULL DEFAULT '',
+    country TEXT NOT NULL DEFAULT '',
+    pass_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+
+// Формат хэша совпадает с lib/server-auth.ts
+function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, Buffer.from(salt, "hex"), 64).toString("hex");
+  return `s2:${salt}:${hash}`;
+}
+
+const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+const adminPassword = process.env.ADMIN_PASSWORD;
+if (adminEmail && adminPassword) {
+  await sql`
+    INSERT INTO users (name, email, pass_hash, role)
+    VALUES ('Администратор', ${adminEmail}, ${hashPassword(adminPassword)}, 'admin')
+    ON CONFLICT (email)
+    DO UPDATE SET role = 'admin', pass_hash = EXCLUDED.pass_hash`;
+  console.log(`Админ настроен: ${adminEmail}`);
+} else {
+  console.log("ADMIN_EMAIL/ADMIN_PASSWORD не заданы — админ не создан");
+}
 
 const [{ count }] = await sql`SELECT COUNT(*)::int AS count FROM cars`;
 if (count === 0) {

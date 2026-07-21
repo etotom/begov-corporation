@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { register } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
 
 const COUNTRIES = ["Таджикистан", "Узбекистан", "Казахстан", "Кыргызстан", "Россия", "Грузия", "Другая страна"];
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -30,10 +31,6 @@ export default function RegisterPage() {
       setError("Заполните имя, email и телефон.");
       return;
     }
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      setError("Проверьте формат email.");
-      return;
-    }
     if (form.password.length < 6) {
       setError("Пароль должен быть не короче 6 символов.");
       return;
@@ -43,12 +40,23 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    const res = await register(form);
-    setLoading(false);
-    if (res.ok) {
-      router.push("/account");
-    } else {
-      setError(res.error);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        await refresh();
+        router.push("/account");
+      } else {
+        setError(data.error ?? "Не удалось создать аккаунт");
+      }
+    } catch {
+      setError("Ошибка соединения, попробуйте еще раз.");
+    } finally {
+      setLoading(false);
     }
   }
 

@@ -40,6 +40,14 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-background transition-colors hover:bg-accent-2"
+            >
+              Admin
+            </Link>
+          )}
           {user ? (
             <Link
               href="/account"
@@ -98,6 +106,15 @@ export default function Header() {
               </Link>
             ))}
             <div className="mt-3 flex gap-3 border-t border-line pt-4">
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-lg bg-accent px-4 py-2.5 text-center text-sm font-bold text-background"
+                >
+                  Admin
+                </Link>
+              )}
               {user ? (
                 <Link
                   href="/account"

@@ -88,8 +88,8 @@ export default function AdminClient({
     setForm((f) => ({ ...f, [key]: value }));
 
   async function logout() {
-    await fetch("/api/admin/login", { method: "DELETE" });
-    router.push("/admin/login");
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/");
     router.refresh();
   }
 
