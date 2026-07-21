@@ -41,6 +41,7 @@ export function carInputFromBody(
       source: source as CarInput["source"],
       status: status as CarInput["status"],
       photoUrl: str("photoUrl") || null,
+      listingUrl: str("listingUrl") || null,
       visible: b.visible !== false,
     },
   };

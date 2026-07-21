@@ -29,9 +29,12 @@ await sql`
     source TEXT NOT NULL DEFAULT 'США',
     status TEXT NOT NULL DEFAULT 'Под заказ',
     photo_url TEXT,
+    listing_url TEXT,
     visible BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`;
+
+await sql`ALTER TABLE cars ADD COLUMN IF NOT EXISTS listing_url TEXT`;
 
 await sql`
   CREATE TABLE IF NOT EXISTS leads (

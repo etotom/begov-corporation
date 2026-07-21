@@ -47,6 +47,7 @@ function rowToCar(r: any): Car {
     source: r.source,
     status: r.status,
     photoUrl: r.photo_url,
+    listingUrl: r.listing_url,
     visible: r.visible,
   };
 }
@@ -128,8 +129,8 @@ export async function getAllCars(): Promise<Car[]> {
 
 export async function createCar(c: CarInput): Promise<Car> {
   const rows = await sql`
-    INSERT INTO cars (make, model, year, price, mileage_km, engine, fuel, gearbox, drive, body, color, source, status, photo_url, visible)
-    VALUES (${c.make}, ${c.model}, ${c.year}, ${c.price}, ${c.mileageKm}, ${c.engine}, ${c.fuel}, ${c.gearbox}, ${c.drive}, ${c.body}, ${c.color}, ${c.source}, ${c.status}, ${c.photoUrl}, ${c.visible})
+    INSERT INTO cars (make, model, year, price, mileage_km, engine, fuel, gearbox, drive, body, color, source, status, photo_url, listing_url, visible)
+    VALUES (${c.make}, ${c.model}, ${c.year}, ${c.price}, ${c.mileageKm}, ${c.engine}, ${c.fuel}, ${c.gearbox}, ${c.drive}, ${c.body}, ${c.color}, ${c.source}, ${c.status}, ${c.photoUrl}, ${c.listingUrl}, ${c.visible})
     RETURNING *`;
   return rowToCar(rows[0]);
 }
@@ -140,7 +141,8 @@ export async function updateCar(id: number, c: CarInput): Promise<Car | null> {
       make = ${c.make}, model = ${c.model}, year = ${c.year}, price = ${c.price},
       mileage_km = ${c.mileageKm}, engine = ${c.engine}, fuel = ${c.fuel},
       gearbox = ${c.gearbox}, drive = ${c.drive}, body = ${c.body}, color = ${c.color},
-      source = ${c.source}, status = ${c.status}, photo_url = ${c.photoUrl}, visible = ${c.visible}
+      source = ${c.source}, status = ${c.status}, photo_url = ${c.photoUrl},
+      listing_url = ${c.listingUrl}, visible = ${c.visible}
     WHERE id = ${id}
     RETURNING *`;
   return rows[0] ? rowToCar(rows[0]) : null;

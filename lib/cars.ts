@@ -22,6 +22,7 @@ export interface Car {
   source: CarSource;
   status: CarStatus;
   photoUrl: string | null;
+  listingUrl: string | null;
   visible: boolean;
 }
 

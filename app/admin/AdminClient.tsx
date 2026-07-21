@@ -30,6 +30,7 @@ const emptyForm = {
   source: "США",
   status: "В наличии в Грузии",
   photoUrl: "",
+  listingUrl: "",
   visible: true,
 };
 
@@ -51,6 +52,7 @@ function carToForm(c: Car): CarForm {
     source: c.source,
     status: c.status,
     photoUrl: c.photoUrl ?? "",
+    listingUrl: c.listingUrl ?? "",
     visible: c.visible,
   };
 }
@@ -80,6 +82,10 @@ export default function AdminClient({
   const [form, setForm] = useState<CarForm>(emptyForm);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lookupUrl, setLookupUrl] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupMsg, setLookupMsg] = useState("");
+  const [lookupHint, setLookupHint] = useState<{ title: string | null; description: string | null } | null>(null);
 
   const newLeads = useMemo(() => leads.filter((l) => l.status === "new").length, [leads]);
   const hiddenCars = useMemo(() => cars.filter((c) => !c.visible).length, [cars]);
@@ -97,6 +103,7 @@ export default function AdminClient({
     setEditingId(null);
     setForm(emptyForm);
     setFormError("");
+    setLookupHint(null);
     setFormOpen(true);
   }
 
@@ -104,7 +111,50 @@ export default function AdminClient({
     setEditingId(car.id);
     setForm(carToForm(car));
     setFormError("");
+    setLookupHint(null);
     setFormOpen(true);
+  }
+
+  async function lookupListing() {
+    const url = lookupUrl.trim();
+    if (!url) return;
+    setLookupLoading(true);
+    setLookupMsg("");
+    setLookupHint(null);
+    try {
+      const res = await fetch("/api/admin/car-lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      setEditingId(null);
+      setFormError("");
+      if (data.ok) {
+        setForm({
+          ...emptyForm,
+          listingUrl: url,
+          photoUrl: data.data.image ?? "",
+          price: data.data.price ? String(data.data.price) : "",
+        });
+        setLookupHint({ title: data.data.title, description: data.data.description });
+        setLookupMsg(
+          data.data.title || data.data.image
+            ? "Подтянули то, что сайт публикует открыто (см. подсказку ниже) — марку, модель и остальное впишите сами."
+            : "Сайт не отдал ни заголовка, ни фото — заполните карточку вручную.",
+        );
+      } else {
+        setForm({ ...emptyForm, listingUrl: url });
+        setLookupMsg(data.reason ?? "Не удалось получить данные — заполните вручную.");
+      }
+      setFormOpen(true);
+    } catch {
+      setForm({ ...emptyForm, listingUrl: url });
+      setFormOpen(true);
+      setLookupMsg("Ошибка соединения — заполните вручную.");
+    } finally {
+      setLookupLoading(false);
+    }
   }
 
   async function saveCar(e: React.FormEvent) {
@@ -314,18 +364,45 @@ export default function AdminClient({
       {/* Каталог */}
       {tab === "cars" && (
         <div className="mt-6">
-          <button
-            onClick={openCreate}
-            className="rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-accent-2"
-          >
-            + Добавить авто
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={openCreate}
+              className="rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-accent-2"
+            >
+              + Добавить авто
+            </button>
+            <span className="text-sm text-muted">или</span>
+            <div className="flex flex-1 min-w-[260px] gap-2">
+              <input
+                value={lookupUrl}
+                onChange={(e) => setLookupUrl(e.target.value)}
+                placeholder="Ссылка на объявление (myauto.ge, autopapa.ge…)"
+                className={`${inputCls} flex-1`}
+              />
+              <button
+                type="button"
+                onClick={lookupListing}
+                disabled={lookupLoading || !lookupUrl.trim()}
+                className="shrink-0 rounded-lg border border-line px-4 py-2.5 text-sm font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+              >
+                {lookupLoading ? "Проверяем…" : "Проверить"}
+              </button>
+            </div>
+          </div>
+          {lookupMsg && <p className="mt-2 text-xs text-muted">{lookupMsg}</p>}
 
           {formOpen && (
             <form onSubmit={saveCar} className="mt-5 rounded-2xl border border-accent/40 bg-surface p-6">
               <h3 className="font-display font-semibold">
                 {editingId ? "Редактировать авто" : "Новое авто"}
               </h3>
+              {lookupHint && (lookupHint.title || lookupHint.description) && (
+                <div className="mt-3 rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs leading-relaxed text-muted">
+                  <span className="font-bold text-accent">Из объявления: </span>
+                  {lookupHint.title}
+                  {lookupHint.description ? ` — ${lookupHint.description}` : ""}
+                </div>
+              )}
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <input value={form.make} onChange={(e) => set("make")(e.target.value)} placeholder="Марка (Toyota) *" className={inputCls} />
                 <input value={form.model} onChange={(e) => set("model")(e.target.value)} placeholder="Модель (Camry SE) *" className={inputCls} />
@@ -353,6 +430,12 @@ export default function AdminClient({
                   {CAR_STATUSES.map((v) => <option key={v}>{v}</option>)}
                 </select>
                 <input value={form.photoUrl} onChange={(e) => set("photoUrl")(e.target.value)} placeholder="Ссылка на фото (https://…)" className={`${inputCls} sm:col-span-2`} />
+                <input
+                  value={form.listingUrl}
+                  onChange={(e) => set("listingUrl")(e.target.value)}
+                  placeholder="Ссылка на исходное объявление (не показывается на сайте)"
+                  className={`${inputCls} sm:col-span-2 lg:col-span-3`}
+                />
               </div>
               <label className="mt-4 flex items-center gap-2 text-sm">
                 <input
@@ -422,6 +505,17 @@ export default function AdminClient({
                         <span className="rounded bg-red-500/15 px-1.5 py-0.5 font-bold text-red-400">
                           Скрыто
                         </span>
+                      )}
+                      {car.listingUrl && (
+                        <a
+                          href={car.listingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-muted hover:text-accent"
+                          title="Открыть исходное объявление"
+                        >
+                          🔗 источник
+                        </a>
                       )}
                     </div>
                   </div>
