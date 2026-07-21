@@ -1,8 +1,9 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   CAR_BODIES,
   CAR_SOURCES,
@@ -14,6 +15,36 @@ import {
 import type { DbLead } from "@/lib/db";
 
 type Tab = "leads" | "cars";
+
+// Грубое сопоставление терминов NHTSA vPIC с нашими вариантами в форме
+function mapBody(v: string): string {
+  const s = v.toLowerCase();
+  if (s.includes("suv") || s.includes("sport utility")) return "Внедорожник";
+  if (s.includes("crossover") || s.includes("cuv")) return "Кроссовер";
+  return "Седан";
+}
+function mapDrive(v: string): string {
+  const s = v.toLowerCase();
+  if (s.includes("front") || s.includes("fwd")) return "Передний";
+  if (s.includes("rear") || s.includes("rwd")) return "Задний";
+  if (s.includes("all") || s.includes("awd") || s.includes("4wd") || s.includes("4x4")) return "Полный";
+  return "Передний";
+}
+function mapFuel(v: string): string {
+  const s = v.toLowerCase();
+  if (s.includes("diesel")) return "Дизель";
+  if (s.includes("electric")) return "Электро";
+  if (s.includes("hybrid")) return "Гибрид";
+  return "Бензин";
+}
+function mapGearbox(v: string): string {
+  const s = v.toLowerCase();
+  if (s.includes("cvt") || s.includes("continuously variable")) return "Вариатор";
+  if (s.includes("automated manual") || s.includes("dual-clutch") || s.includes("dct") || s.includes("amt"))
+    return "Робот";
+  if (s.includes("manual")) return "Механика";
+  return "Автомат";
+}
 
 const emptyForm = {
   make: "",
@@ -86,6 +117,12 @@ export default function AdminClient({
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupMsg, setLookupMsg] = useState("");
   const [lookupHint, setLookupHint] = useState<{ title: string | null; description: string | null } | null>(null);
+  const [vin, setVin] = useState("");
+  const [vinLoading, setVinLoading] = useState(false);
+  const [vinError, setVinError] = useState("");
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const newLeads = useMemo(() => leads.filter((l) => l.status === "new").length, [leads]);
   const hiddenCars = useMemo(() => cars.filter((c) => !c.visible).length, [cars]);
@@ -154,6 +191,70 @@ export default function AdminClient({
       setLookupMsg("Ошибка соединения — заполните вручную.");
     } finally {
       setLookupLoading(false);
+    }
+  }
+
+  async function fillFromVin() {
+    const clean = vin.trim().toUpperCase();
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(clean)) {
+      setVinError("VIN должен состоять из 17 символов (латинские буквы и цифры, без I, O, Q).");
+      return;
+    }
+    setVinLoading(true);
+    setVinError("");
+    try {
+      const res = await fetch(`/api/vin?vin=${clean}`);
+      const data = await res.json();
+      if (!data.ok) {
+        setVinError(data.error ?? "Не удалось расшифровать VIN");
+        return;
+      }
+      const fields = data.result as { label: string; value: string }[];
+      const get = (label: string) => fields.find((f) => f.label === label)?.value ?? "";
+
+      const make = get("Марка");
+      const model = [get("Модель"), get("Комплектация")].filter(Boolean).join(" ");
+      const year = get("Год выпуска");
+      const displacement = get("Объем двигателя, л");
+      const bodyClass = get("Тип кузова");
+      const driveType = get("Привод");
+      const fuelType = get("Топливо");
+      const transmission = get("Коробка передач");
+
+      setForm((f) => ({
+        ...f,
+        make: make || f.make,
+        model: model || f.model,
+        year: year || f.year,
+        engine: displacement ? `${displacement} л` : f.engine,
+        body: bodyClass ? mapBody(bodyClass) : f.body,
+        drive: driveType ? mapDrive(driveType) : f.drive,
+        fuel: fuelType ? mapFuel(fuelType) : f.fuel,
+        gearbox: transmission ? mapGearbox(transmission) : f.gearbox,
+      }));
+    } catch {
+      setVinError("Сервис проверки VIN временно недоступен, попробуйте позже.");
+    } finally {
+      setVinLoading(false);
+    }
+  }
+
+  async function handlePhotoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError("");
+    setPhotoUploading(true);
+    try {
+      const blob = await upload(`cars/${Date.now()}-${file.name}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/admin/upload",
+      });
+      set("photoUrl")(blob.url);
+    } catch {
+      setPhotoError("Не удалось загрузить фото — попробуйте другой файл.");
+    } finally {
+      setPhotoUploading(false);
     }
   }
 
@@ -403,6 +504,31 @@ export default function AdminClient({
                   {lookupHint.description ? ` — ${lookupHint.description}` : ""}
                 </div>
               )}
+
+              <div className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border border-line bg-background p-3">
+                <div className="min-w-[220px] flex-1">
+                  <label className="text-xs font-semibold text-muted">
+                    Заполнить марку/модель/год по VIN
+                  </label>
+                  <input
+                    value={vin}
+                    onChange={(e) => setVin(e.target.value.toUpperCase())}
+                    maxLength={17}
+                    placeholder="17 символов VIN"
+                    className={`${inputCls} mt-1 font-mono tracking-wider`}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={fillFromVin}
+                  disabled={vinLoading || vin.trim().length !== 17}
+                  className="shrink-0 rounded-lg border border-line px-4 py-2.5 text-sm font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                >
+                  {vinLoading ? "Заполняем…" : "Заполнить по VIN"}
+                </button>
+              </div>
+              {vinError && <p className="mt-1.5 text-xs text-red-400">{vinError}</p>}
+
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <input value={form.make} onChange={(e) => set("make")(e.target.value)} placeholder="Марка (Toyota) *" className={inputCls} />
                 <input value={form.model} onChange={(e) => set("model")(e.target.value)} placeholder="Модель (Camry SE) *" className={inputCls} />
@@ -429,7 +555,49 @@ export default function AdminClient({
                 <select value={form.status} onChange={(e) => set("status")(e.target.value)} className={inputCls}>
                   {CAR_STATUSES.map((v) => <option key={v}>{v}</option>)}
                 </select>
-                <input value={form.photoUrl} onChange={(e) => set("photoUrl")(e.target.value)} placeholder="Ссылка на фото (https://…)" className={`${inputCls} sm:col-span-2`} />
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <div className="flex items-center gap-3">
+                    {form.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={form.photoUrl}
+                        alt="Фото авто"
+                        className="h-16 w-24 shrink-0 rounded-lg border border-line object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-line bg-surface-2 text-xl text-muted">
+                        🚗
+                      </div>
+                    )}
+                    <div className="flex flex-col items-start gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={photoUploading}
+                        className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                      >
+                        {photoUploading ? "Загружаем…" : form.photoUrl ? "Заменить фото" : "Загрузить фото"}
+                      </button>
+                      {form.photoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => set("photoUrl")("")}
+                          className="text-xs text-muted hover:text-red-400"
+                        >
+                          Убрать фото
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePhotoFile}
+                      className="hidden"
+                    />
+                  </div>
+                  {photoError && <p className="mt-1.5 text-xs text-red-400">{photoError}</p>}
+                </div>
                 <input
                   value={form.listingUrl}
                   onChange={(e) => set("listingUrl")(e.target.value)}
