@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@/components/AuthProvider";
+import { saveLead } from "@/lib/leads";
 
 interface VinField {
   label: string;
@@ -9,16 +10,55 @@ interface VinField {
 }
 
 export default function VinClient() {
+  const { user } = useAuth();
   const [vin, setVin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<VinField[] | null>(null);
   const [checkedVin, setCheckedVin] = useState("");
 
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const [reqPhone, setReqPhone] = useState("");
+  const [reqMessage, setReqMessage] = useState("");
+  const [reqError, setReqError] = useState("");
+
+  const findField = (label: string) => result?.find((f) => f.label === label)?.value ?? "";
+  const carSummary = [findField("Марка"), findField("Модель"), findField("Год выпуска")]
+    .filter(Boolean)
+    .join(" ");
+  const photoSearchUrl = carSummary
+    ? `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(carSummary)}`
+    : "";
+
+  function sendPhotoRequest(e: React.FormEvent) {
+    e.preventDefault();
+    const phone = reqPhone.trim() || user?.phone || "";
+    if (!phone) {
+      setReqError("Укажите телефон, чтобы менеджер мог с вами связаться.");
+      return;
+    }
+    setReqError("");
+    saveLead({
+      type: "Фото и ДТП по VIN",
+      summary: `${carSummary || "Авто"} — VIN ${checkedVin}`,
+      details: reqMessage.trim(),
+      name: user?.name ?? "",
+      phone,
+      country: user?.country ?? "",
+    });
+    setRequestSent(true);
+  }
+
   async function check(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setResult(null);
+    setRequestOpen(false);
+    setRequestSent(false);
+    setReqPhone("");
+    setReqMessage("");
+    setReqError("");
     const clean = vin.trim().toUpperCase();
     if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(clean)) {
       setError("VIN должен состоять из 17 символов: латинские буквы и цифры (без I, O, Q).");
@@ -87,13 +127,75 @@ export default function VinClient() {
               </div>
             ))}
           </dl>
-          <div className="border-t border-line bg-surface-2 px-5 py-4 text-xs leading-relaxed text-muted">
-            Это заводские данные. Полную историю (ДТП, пробег, количество владельцев, фото с
-            аукциона по Carfax / AutoCheck) запросите у менеджера —{" "}
-            <Link href="/contacts" className="font-semibold text-accent hover:underline">
-              оставить заявку
-            </Link>
-            .
+          <div className="border-t border-line bg-surface-2 px-5 py-4">
+            <p className="text-xs leading-relaxed text-muted">
+              Это заводские данные — фото конкретного авто и историю ДТП база NHTSA не хранит.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {photoSearchUrl && (
+                <a
+                  href={photoSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-line px-4 py-2 text-xs font-semibold transition-colors hover:border-accent hover:text-accent"
+                >
+                  🔍 Посмотреть фото {carSummary} в интернете
+                </a>
+              )}
+              {!requestOpen && !requestSent && (
+                <button
+                  type="button"
+                  onClick={() => setRequestOpen(true)}
+                  className="rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-accent-2"
+                >
+                  📸 Запросить фото и ДТП у менеджера
+                </button>
+              )}
+            </div>
+
+            {requestOpen && !requestSent && (
+              <form onSubmit={sendPhotoRequest} className="mt-4 space-y-3 border-t border-line pt-4">
+                <p className="text-xs leading-relaxed text-muted">
+                  Пришлем реальные фото этого конкретного автомобиля (с аукциона) и отчет
+                  Carfax/AutoCheck по истории ДТП, пробегу и владельцам.
+                </p>
+                <input
+                  value={reqPhone}
+                  onChange={(e) => setReqPhone(e.target.value)}
+                  placeholder={user?.phone ? `Телефон (${user.phone})` : "Телефон (WhatsApp / Telegram) *"}
+                  className="w-full rounded-lg border border-line bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-accent"
+                />
+                <textarea
+                  value={reqMessage}
+                  onChange={(e) => setReqMessage(e.target.value)}
+                  rows={2}
+                  placeholder="Уточнения (необязательно)"
+                  className="w-full rounded-lg border border-line bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-accent"
+                />
+                {reqError && <p className="text-xs text-red-400">{reqError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-accent px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-accent-2"
+                  >
+                    Отправить запрос
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRequestOpen(false)}
+                    className="rounded-lg border border-line px-4 py-2 text-xs font-semibold text-muted hover:text-foreground"
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {requestSent && (
+              <div className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-xs leading-relaxed text-emerald-300">
+                Заявка отправлена! Менеджер пришлет фото и историю ДТП по этому VIN в ближайшее время.
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
 
 export interface Lead {
   id: string;
-  type: "Подбор авто" | "Расчет доставки" | "Вопрос" | "Заявка по авто";
+  type: "Подбор авто" | "Расчет доставки" | "Вопрос" | "Заявка по авто" | "Фото и ДТП по VIN";
   summary: string;
   details?: string;
   name?: string;
