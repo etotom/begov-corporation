@@ -5,6 +5,7 @@ import AuthProvider from "@/components/AuthProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import TelegramButton from "@/components/TelegramButton";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -59,6 +60,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <TelegramButton />
           <WhatsAppButton />
         </AuthProvider>
       </body>
