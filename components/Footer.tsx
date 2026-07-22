@@ -77,7 +77,17 @@ export default function Footer() {
                 info@begov-corporation.com
               </a>
             </li>
-            <li className="pt-1 text-xs">WhatsApp · Telegram — по номеру телефона</li>
+            <li>
+              <a
+                href="https://t.me/begovcorp_bot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-accent transition-colors hover:underline"
+              >
+                🤖 Telegram-бот @begovcorp_bot
+              </a>
+            </li>
+            <li className="pt-1 text-xs">WhatsApp — по номеру телефона</li>
           </ul>
         </div>
       </div>
