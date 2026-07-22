@@ -176,17 +176,26 @@ export default function AdminClient({
       setEditingId(null);
       setFormError("");
       if (data.ok) {
+        const d = data.data;
+        const photos: string[] = Array.isArray(d.images) ? d.images.slice(0, MAX_CAR_PHOTOS) : [];
         setForm({
           ...emptyForm,
           listingUrl: url,
-          photos: data.data.image ? [data.data.image] : [],
-          price: data.data.price ? String(data.data.price) : "",
+          make: d.make ?? "",
+          model: d.model ?? "",
+          year: d.year ? String(d.year) : emptyForm.year,
+          price: d.price ? String(d.price) : "",
+          photos,
         });
-        setLookupHint({ title: data.data.title, description: data.data.description });
+        setLookupHint({ title: d.title, description: d.description });
+        const got: string[] = [];
+        if (d.make || d.model) got.push("марку и модель");
+        if (d.year) got.push("год");
+        if (photos.length) got.push(`${photos.length} фото`);
         setLookupMsg(
-          data.data.title || data.data.image
-            ? "Подтянули то, что сайт публикует открыто (см. подсказку ниже) — марку, модель и остальное впишите сами."
-            : "Сайт не отдал ни заголовка, ни фото — заполните карточку вручную.",
+          got.length
+            ? `✅ Подтянул: ${got.join(", ")}. Проверьте поля, впишите цену и пробег — лишние фото можно удалить, первое станет обложкой.`
+            : "Сайт не отдал структурных данных — заполните карточку вручную (ссылка на объявление сохранена).",
         );
       } else {
         setForm({ ...emptyForm, listingUrl: url });
