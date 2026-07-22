@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createLead } from "@/lib/db";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getSessionUser } from "@/lib/server-auth";
+import { notifyNewLead } from "@/lib/telegram";
 
 const MAX = 2000;
 const clip = (v: unknown) => String(v ?? "").slice(0, MAX);
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     const summary = clip(b.summary);
     if (!summary) return NextResponse.json({ ok: false, error: "Пустая заявка" }, { status: 400 });
     const user = await getSessionUser();
-    await createLead({
+    const lead = await createLead({
       type,
       summary,
       details: clip(b.details),
@@ -26,6 +27,8 @@ export async function POST(request: Request) {
       country: clip(b.country) || user?.country || "",
       userId: user?.id ?? null,
     });
+    // Мгновенное уведомление админам в Telegram (не ломает ответ, если бот не настроен)
+    await notifyNewLead(lead);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });

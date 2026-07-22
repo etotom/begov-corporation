@@ -71,6 +71,25 @@ await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL
 
 // user_id — после создания users, чтобы FK мог сослаться на существующую таблицу
 await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id)`;
+// telegram_chat_id — для заявок из бота (ответ клиенту прямо в Telegram)
+await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS telegram_chat_id BIGINT`;
+
+// --- Telegram-бот ---
+await sql`
+  CREATE TABLE IF NOT EXISTS telegram_admins (
+    chat_id BIGINT PRIMARY KEY,
+    username TEXT NOT NULL DEFAULT '',
+    first_name TEXT NOT NULL DEFAULT '',
+    is_owner BOOLEAN NOT NULL DEFAULT false,
+    added_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+await sql`
+  CREATE TABLE IF NOT EXISTS telegram_sessions (
+    chat_id BIGINT PRIMARY KEY,
+    state TEXT NOT NULL DEFAULT '',
+    data JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
 
 // Формат хэша совпадает с lib/server-auth.ts
 function hashPassword(password) {

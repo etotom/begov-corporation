@@ -29,6 +29,19 @@ export interface DbLead {
   status: "new" | "done";
   createdAt: string;
   userId: number | null;
+  telegramChatId: number | null;
+}
+
+export interface TgAdmin {
+  chatId: number;
+  username: string;
+  firstName: string;
+  isOwner: boolean;
+}
+
+export interface TgSession {
+  state: string;
+  data: Record<string, unknown>;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -66,6 +79,7 @@ function rowToLead(r: any): DbLead {
     status: r.status,
     createdAt: r.created_at,
     userId: r.user_id ?? null,
+    telegramChatId: r.telegram_chat_id != null ? Number(r.telegram_chat_id) : null,
   };
 }
 function rowToUser(r: any): DbUserWithHash {
@@ -172,10 +186,11 @@ export async function createLead(input: {
   phone?: string;
   country?: string;
   userId?: number | null;
+  telegramChatId?: number | null;
 }): Promise<DbLead> {
   const rows = await sql`
-    INSERT INTO leads (type, summary, details, name, phone, country, user_id)
-    VALUES (${input.type}, ${input.summary}, ${input.details ?? ""}, ${input.name ?? ""}, ${input.phone ?? ""}, ${input.country ?? ""}, ${input.userId ?? null})
+    INSERT INTO leads (type, summary, details, name, phone, country, user_id, telegram_chat_id)
+    VALUES (${input.type}, ${input.summary}, ${input.details ?? ""}, ${input.name ?? ""}, ${input.phone ?? ""}, ${input.country ?? ""}, ${input.userId ?? null}, ${input.telegramChatId ?? null})
     RETURNING *`;
   return rowToLead(rows[0]);
 }
@@ -183,6 +198,11 @@ export async function createLead(input: {
 export async function getLeads(): Promise<DbLead[]> {
   const rows = await sql`SELECT * FROM leads ORDER BY created_at DESC`;
   return rows.map(rowToLead);
+}
+
+export async function getLeadById(id: number): Promise<DbLead | null> {
+  const rows = await sql`SELECT * FROM leads WHERE id = ${id}`;
+  return rows[0] ? rowToLead(rows[0]) : null;
 }
 
 export async function getLeadsByUser(userId: number): Promise<DbLead[]> {
@@ -196,4 +216,80 @@ export async function setLeadStatus(id: number, status: "new" | "done"): Promise
 
 export async function deleteLead(id: number): Promise<void> {
   await sql`DELETE FROM leads WHERE id = ${id}`;
+}
+
+export async function getLeadStats(): Promise<{ total: number; new: number; done: number; cars: number }> {
+  const rows = await sql`
+    SELECT
+      (SELECT COUNT(*) FROM leads)::int AS total,
+      (SELECT COUNT(*) FROM leads WHERE status = 'new')::int AS new,
+      (SELECT COUNT(*) FROM leads WHERE status = 'done')::int AS done,
+      (SELECT COUNT(*) FROM cars WHERE visible = true)::int AS cars`;
+  const r = rows[0];
+  return { total: r.total, new: r.new, done: r.done, cars: r.cars };
+}
+
+// --- Telegram: администраторы бота ---
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function rowToTgAdmin(r: any): TgAdmin {
+  return {
+    chatId: Number(r.chat_id),
+    username: r.username ?? "",
+    firstName: r.first_name ?? "",
+    isOwner: !!r.is_owner,
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+export async function getTelegramAdmins(): Promise<TgAdmin[]> {
+  const rows = await sql`SELECT * FROM telegram_admins ORDER BY is_owner DESC, added_at`;
+  return rows.map(rowToTgAdmin);
+}
+
+export async function isTelegramAdmin(chatId: number): Promise<boolean> {
+  const rows = await sql`SELECT 1 FROM telegram_admins WHERE chat_id = ${chatId}`;
+  return rows.length > 0;
+}
+
+export async function addTelegramAdmin(a: {
+  chatId: number;
+  username?: string;
+  firstName?: string;
+  isOwner?: boolean;
+}): Promise<void> {
+  await sql`
+    INSERT INTO telegram_admins (chat_id, username, first_name, is_owner)
+    VALUES (${a.chatId}, ${a.username ?? ""}, ${a.firstName ?? ""}, ${a.isOwner ?? false})
+    ON CONFLICT (chat_id) DO UPDATE SET
+      username = EXCLUDED.username,
+      first_name = EXCLUDED.first_name,
+      is_owner = telegram_admins.is_owner OR EXCLUDED.is_owner`;
+}
+
+export async function removeTelegramAdmin(chatId: number): Promise<boolean> {
+  const rows = await sql`DELETE FROM telegram_admins WHERE chat_id = ${chatId} AND is_owner = false RETURNING chat_id`;
+  return rows.length > 0;
+}
+
+// --- Telegram: состояние диалога (многошаговые сценарии) ---
+
+export async function getTgSession(chatId: number): Promise<TgSession> {
+  const rows = await sql`SELECT state, data FROM telegram_sessions WHERE chat_id = ${chatId}`;
+  return rows[0] ? { state: rows[0].state, data: rows[0].data ?? {} } : { state: "", data: {} };
+}
+
+export async function setTgSession(
+  chatId: number,
+  state: string,
+  data: Record<string, unknown> = {},
+): Promise<void> {
+  await sql`
+    INSERT INTO telegram_sessions (chat_id, state, data, updated_at)
+    VALUES (${chatId}, ${state}, ${JSON.stringify(data)}::jsonb, now())
+    ON CONFLICT (chat_id) DO UPDATE SET state = EXCLUDED.state, data = EXCLUDED.data, updated_at = now()`;
+}
+
+export async function clearTgSession(chatId: number): Promise<void> {
+  await sql`DELETE FROM telegram_sessions WHERE chat_id = ${chatId}`;
 }
