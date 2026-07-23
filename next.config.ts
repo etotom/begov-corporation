@@ -4,13 +4,15 @@ const CSP = [
   "default-src 'self'",
   // 'unsafe-inline' нужен: Next.js App Router встраивает инлайн-скрипты для
   // гидратации RSC-пейлоада — без этого сайт не оживёт на клиенте.
-  "script-src 'self' 'unsafe-inline'",
+  // mc.yandex.ru — для Яндекс.Метрики (грузится только если задан счётчик).
+  "script-src 'self' 'unsafe-inline' https://mc.yandex.ru",
   "style-src 'self' 'unsafe-inline'",
   // Фото авто грузятся из Vercel Blob (случайный поддомен) и — при импорте
   // объявления в админке — с произвольного внешнего сайта, поэтому https: широко.
   "img-src 'self' https: data:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.vercel-storage.com",
+  "connect-src 'self' https://*.vercel-storage.com https://mc.yandex.ru https://mc.yandex.com",
+  "frame-src https://mc.yandex.ru",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

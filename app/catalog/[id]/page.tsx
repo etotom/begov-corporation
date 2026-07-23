@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import CarGallery from "@/components/CarGallery";
 import { formatKm, formatPrice } from "@/lib/cars";
 import { getCarById } from "@/lib/db";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -24,9 +25,18 @@ export async function generateMetadata({
   const car = await loadCar(id);
   if (!car) return {};
   const title = `${car.make} ${car.model} ${car.year}`;
+  const description = `${title} — ${formatPrice(car.price)}, ${formatKm(car.mileageKm)}. Доставка из ${car.source} через Грузию.`;
+  const cover = car.photos[0];
   return {
     title,
-    description: `${title} — ${formatPrice(car.price)}, ${formatKm(car.mileageKm)}. Доставка из ${car.source} через Грузию.`,
+    description,
+    alternates: { canonical: `/catalog/${car.id}` },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      ...(cover ? { images: [{ url: cover }] } : {}),
+    },
   };
 }
 
@@ -50,8 +60,34 @@ export default async function CarPage({ params }: { params: Promise<{ id: string
 
   const carLabel = `${car.make} ${car.model} ${car.year}`;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Car",
+    name: carLabel,
+    brand: { "@type": "Brand", name: car.make },
+    model: car.model,
+    vehicleModelDate: String(car.year),
+    ...(car.color ? { color: car.color } : {}),
+    ...(car.fuel ? { fuelType: car.fuel } : {}),
+    ...(car.mileageKm
+      ? { mileageFromOdometer: { "@type": "QuantitativeValue", value: car.mileageKm, unitCode: "KMT" } }
+      : {}),
+    ...(car.photos.length ? { image: car.photos } : {}),
+    offers: {
+      "@type": "Offer",
+      price: car.price,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      url: `${SITE_URL}/catalog/${car.id}`,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link href="/catalog" className="text-sm font-semibold text-accent hover:underline">
         ← Весь каталог
       </Link>
