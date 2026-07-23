@@ -122,7 +122,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-6xl px-4 pb-10 sm:pb-12">
+          <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-14 sm:pb-12 sm:pt-20">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {[
                 ["3 региона", "закупки: США · Европа · ОАЭ"],
